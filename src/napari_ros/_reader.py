@@ -5,7 +5,9 @@ It implements the Reader specification, but your plugin may choose to
 implement multiple readers or even other plugin contributions. see:
 https://napari.org/stable/plugins/guides.html?#readers
 """
-import numpy as np
+from pims import PyAVReaderTimed, PyAVReaderIndexed
+from dask import delayed
+import dask.array as da
 
 
 def napari_get_reader(path):
@@ -29,7 +31,7 @@ def napari_get_reader(path):
         path = path[0]
 
     # if we know we cannot read the file, we immediately return None.
-    if not path.endswith(".npy"):
+    if not path.endswith(".mp4"):
         return None
 
     # otherwise we return the *function* that can read ``path``.
@@ -60,13 +62,30 @@ def reader_function(path):
     """
     # handle both a string and a list of strings
     paths = [path] if isinstance(path, str) else path
-    # load all files into array
-    arrays = [np.load(_path) for _path in paths]
-    # stack arrays into single array
-    data = np.squeeze(np.stack(arrays))
+
+    if len(paths) != 1:
+        raise ValueError("ROS reader can only handle a single video file")
+
+    video = PyAVReaderTimed(paths[0])
+
+    # TODO: Get number of frames a better way?
+    frameRate = video.frame_rate
+    duration = video.duration
+    frames = int(frameRate * duration)
+
+    lazy_video = delayed(video)
+    lazy_arrays = [lazy_video[i] for i in range(frames)]
+    arrays = [
+        da.from_delayed(
+            delayed_reader, shape=video.frame_shape, dtype=video.pixel_type
+        )
+        for delayed_reader in lazy_arrays
+    ]
+
+    data = da.stack(arrays, axis=0)
 
     # optional kwargs for the corresponding viewer.add_* method
-    add_kwargs = {}
+    add_kwargs = {"contrast_limits": [0, 255], "multiscale": False}
 
     layer_type = "image"  # optional, default is "image"
     return [(data, add_kwargs, layer_type)]

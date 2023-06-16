@@ -17,7 +17,7 @@ contributions:
   readers:
     - command: napari-ros.get_reader
       accepts_directories: false
-      filename_patterns: ['*.npy']
+      filename_patterns: ["*.mp4"]
   widgets:
     - command: napari-ros.make_qwidget
       display_name: Example QWidget
