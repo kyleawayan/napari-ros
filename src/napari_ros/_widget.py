@@ -9,38 +9,74 @@ Replace code below according to your needs.
 from typing import TYPE_CHECKING
 
 from magicgui import magic_factory
-from qtpy.QtWidgets import QHBoxLayout, QPushButton, QWidget
+from magicgui.widgets import Label
+from enum import Enum
 
 if TYPE_CHECKING:
     import napari
 
 
-class ExampleQWidget(QWidget):
-    # your QWidget.__init__ can optionally request the napari viewer instance
-    # in one of two ways:
-    # 1. use a parameter called `napari_viewer`, as done here
-    # 2. use a type annotation of 'napari.viewer.Viewer' for any parameter
-    def __init__(self, napari_viewer):
-        super().__init__()
-        self.viewer = napari_viewer
-
-        btn = QPushButton("Click me!")
-        btn.clicked.connect(self._on_click)
-
-        self.setLayout(QHBoxLayout())
-        self.layout().addWidget(btn)
-
-    def _on_click(self):
-        print("napari has", len(self.viewer.layers), "layers")
+class Methods(Enum):
+    HSVMask = 0
 
 
-@magic_factory
-def example_magic_widget(img_layer: "napari.layers.Image"):
-    print(f"you have selected {img_layer}")
+def calculateEstimatedPlateWidthCmAndUpdateLabelAndSetLabel(
+    cropWidth: int,
+    pixelsBetweenTwoMarkers: float,
+    cmBetweenTwoMarkers: int,
+    label: Label,
+):
+    pixelsPerCm = pixelsBetweenTwoMarkers / cmBetweenTwoMarkers
+    estimatedPlateWidthCm = round(cropWidth / pixelsPerCm, 2)
+    label.value = estimatedPlateWidthCm
 
 
-# Uses the `autogenerate: true` flag in the plugin manifest
-# to indicate it should be wrapped as a magicgui to autogenerate
-# a widget.
-def example_function_widget(img_layer: "napari.layers.Image"):
-    print(f"you have selected {img_layer}")
+def _on_init(widget):
+    widget.changed.connect(
+        lambda x: calculateEstimatedPlateWidthCmAndUpdateLabelAndSetLabel(
+            widget.crop.value[2] - widget.crop.value[0],
+            widget.pixelsBetweenTwoMarkers.value,
+            widget.cmBetweenTwoMarkers.value,
+            widget.estimatedPlateWidthCm,
+        )
+    )
+
+
+@magic_factory(
+    auto_call=True,
+    h={"widget_type": "RangeSlider", "max": 360, "step": 1},
+    s={"widget_type": "RangeSlider", "max": 255, "step": 1},
+    v={"widget_type": "RangeSlider", "max": 255, "step": 1},
+    crop={"options": {"max": 2000, "step": 1}, "layout": "vertical"},
+    estimatedPlateWidthCm={"widget_type": "Label"},
+    widget_init=_on_init,
+)
+def config_magic_widget(
+    img_layer: "napari.layers.Image",
+    method=Methods.HSVMask,
+    h=(0, 360),
+    s=(0, 255),
+    v=(0, 255),
+    crop=[0, 0, 0, 0],
+    areaFilter=10,
+    pixelsBetweenTwoMarkers=10,
+    cmBetweenTwoMarkers=5.00,
+    mirror=False,
+    estimatedPlateWidthCm=0,
+    # estimatedPlateWidth... is a string
+    # (since it's a Label widget), so it needs
+    # to be converted to a float
+):
+    print(
+        img_layer,
+        method,
+        h,
+        s,
+        v,
+        crop,
+        areaFilter,
+        pixelsBetweenTwoMarkers,
+        cmBetweenTwoMarkers,
+        mirror,
+        estimatedPlateWidthCm,
+    )
