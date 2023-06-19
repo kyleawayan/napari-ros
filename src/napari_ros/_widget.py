@@ -80,19 +80,6 @@ def config_magic_widget(
     # (since it's a Label widget), so it needs
     # to be converted to a float
 ):
-    print(
-        layer,
-        method,
-        h,
-        s,
-        v,
-        crop,
-        areaFilter,
-        pixelsBetweenTwoMarkers,
-        cmBetweenTwoMarkers,
-        mirror,
-        estimatedPlateWidthCm,
-    )
 
     # Check if the image is empty
     if layer is None:
@@ -110,12 +97,9 @@ def config_magic_widget(
         crop[1] : crop[3],
         :,
     ]
-    print(frame.shape)
 
     # By this point, frame should be an RGB scaled 0-255
 
     # Get mask and contours
     # TODO: Area filter
     mask, contours = analyzer.getMaskAndContours(h, s, v, areaFilter, frame)
-
-    print(mask, contours)

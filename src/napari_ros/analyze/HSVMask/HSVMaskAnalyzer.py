@@ -16,17 +16,14 @@ class HSVMaskAnalyzer:
         frame: np.ndarray,
     ):
         # Convert to HSV
-        print("Converting to HSV")
         hsvFrame = self.rgbToHsvLookup[frame[0], frame[1], frame[2]]
 
         # By this point, hsvFrame is HSV scaled 0 to 1
 
         # Run getFlameMask
-        print("Running getFlameMask")
         mask = getFlameMask(h, s, v, hsvFrame)
 
         # Get contours
-        print("Getting contours")
         contours = getBinaryContours(mask)
 
         return mask, contours
