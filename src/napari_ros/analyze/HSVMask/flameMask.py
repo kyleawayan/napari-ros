@@ -9,7 +9,7 @@ def getFlameMask(
     hsvFrame: np.ndarray,
 ):
     """
-    Get the mask of the flame using the HSV min and max values. Takes in a frame in RGB format, scaled 0 to 1.
+    Get the mask of the flame using the HSV min and max values. Takes in a frame in HSV format, scaled 0 to 1.
     Outputs True and False values. frame needs to be converted to HSV first.
     """
     # https://scikit-image.org/docs/stable/auto_examples/color_exposure/plot_rgb_to_hsv.html#id2

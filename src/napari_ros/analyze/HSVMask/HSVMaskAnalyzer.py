@@ -1,3 +1,4 @@
+from typing import List
 import numpy as np
 from .rgbToHsvLookup import load_rgb_to_hsv_lookup
 from .flameMask import getFlameMask, getBinaryContours
@@ -16,7 +17,9 @@ class HSVMaskAnalyzer:
         frame: np.ndarray,
     ):
         # Convert to HSV
-        hsvFrame = self.rgbToHsvLookup[frame[0], frame[1], frame[2]]
+        hsvFrame = self.rgbToHsvLookup[
+            frame[..., 0], frame[..., 1], frame[..., 2]
+        ]
 
         # By this point, hsvFrame is HSV scaled 0 to 1
 
@@ -27,3 +30,10 @@ class HSVMaskAnalyzer:
         contours = getBinaryContours(mask)
 
         return mask, contours
+
+    def getHighestXPosFromContoursBigArray(self, contoursBigArray: np.ndarray):
+        """
+        Get the highest x position of the contours.
+        Contours should be a numpy array of shape (n, 2): (row, column)
+        """
+        return contoursBigArray[:, 1].max()
