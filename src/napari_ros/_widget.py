@@ -204,9 +204,25 @@ class ConfigWidget(QWidget):
 
     def on_yielded(self, value):
         self.worker.pause()
+
+        if value is []:
+            return
+
+        currentLayers = self._viewer.layers
+
         # For now lets just put the frame layer
         frameLayer = value[0]
-        self._viewer.add_image(frameLayer[0])
+
+        # Add the frame layer if it doesn't exist
+        # Check if it exists by name
+        for layer in currentLayers:
+            if layer.name == "Frame":
+                # If it exists, update it
+                layer.data = frameLayer[0]
+                return
+
+        # If it doesn't exist, add it
+        self._viewer.add_image(frameLayer[0], name=frameLayer[1]["name"])
 
     def send_next_value(self, config):
         self.worker.send(config)
