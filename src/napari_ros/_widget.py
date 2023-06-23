@@ -20,8 +20,11 @@ if TYPE_CHECKING:
     import napari
 
 from napari.layers import Layer
+from napari.viewer import Viewer
 from napari.types import LayerDataTuple
+from napari.qt.threading import thread_worker
 
+# TODO: Load class based on method
 analyzer = HSVMaskAnalyzer()
 
 
@@ -58,6 +61,154 @@ hsvWidgetConfig = {
     "step": 0.01,
 }
 
+# TODO: Put in another file
+@thread_worker
+def runHsvMaskAndReturnAnnotations():
+    annotatedLayers: List[LayerDataTuple] = []
+
+    while True:
+        new = yield annotatedLayers
+
+        try:
+            layer = new["layer"]
+            crop = new["crop"]
+            mirror = new["mirror"]
+            h = new["h"]
+            s = new["s"]
+            v = new["v"]
+            areaFilter = new["areaFilter"]
+        except:
+            continue
+
+        # Check if the image is empty
+        if layer is None:
+            return
+
+        # Get the current frame the napari viewer is on
+        frameNumber = int(layer._dims_point[0])
+
+        # Get the current frame
+        rawFrame = layer.data[frameNumber, :, :, :]
+
+        # Crop the frame
+        frame = rawFrame[
+            crop[0] : crop[1],
+            crop[2] : crop[3],
+            :,
+        ]
+
+        # Mirror the frame if needed
+        if mirror:
+            frame = np.flip(frame, axis=1)
+
+        # By this point, frame should be an RGB scaled 0-255
+
+        # Preview the frame
+        frameLayer = (
+            frame,
+            {"name": "Frame"},
+            "image",
+        )
+
+        # Get mask and contours
+        # TODO: Area filter
+        mask, contours = analyzer.getMaskAndContours(
+            h, s, v, areaFilter, frame
+        )
+
+        # Preview the mask
+        maskLayer = (
+            mask,
+            {
+                "name": "Mask",
+                "colormap": "green",
+                "contrast_limits": [0, 1],
+                "opacity": 0.5,
+            },
+            "image",
+        )
+
+        # Now lets add annotations
+
+        # Draw a box around the crop
+        boxVerticies = np.array(
+            [
+                [crop[0], crop[2]],
+                [crop[0], crop[3]],
+                [crop[1], crop[3]],
+                [crop[1], crop[2]],
+            ]
+        )
+        cropLayer = (
+            boxVerticies,
+            {"name": "Crop", "edge_color": "white"},
+            "shapes",
+        )
+
+        if contours == []:
+            return [maskLayer, cropLayer]
+
+        # Contours is a list of numpy arrays,
+        # and napari needs a single numpy array for
+        # the points layer, so we concatenate the list
+        # of numpy arrays into a single numpy array
+        contoursBigArray = np.concatenate(contours, axis=0)
+
+        # Now the contours
+        # Uncomment and add to return to preview contours
+        # contoursLayer = (
+        #     contoursBigArray,
+        #     {"name": "Contours", "face_color": "green"},
+        #     "points",
+        # )
+
+        # Draw a red line at the highest X pos
+        highestXPos = analyzer.getHighestXPosFromContoursBigArray(
+            contoursBigArray
+        )
+        highestXPosLayer = (
+            np.array(
+                [
+                    [0, highestXPos],
+                    [frame.shape[0], highestXPos],
+                ]
+            ),
+            {
+                "name": "Highest X Pos",
+                "edge_color": "red",
+                "shape_type": "line",
+                "edge_width": 5,
+            },
+            "Shapes",
+        )
+
+        annotatedLayers = [frameLayer, maskLayer, cropLayer, highestXPosLayer]
+
+
+# TODO: Load worker based on method
+worker = runHsvMaskAndReturnAnnotations()
+
+
+def on_yielded(value):
+    worker.pause()
+    # TODO: I need to somehow add these layers
+    # to the napari viewer
+    print(value)
+
+
+def on_return(value):
+    raise Exception("Should not return")
+
+
+def send_next_value(config):
+    worker.send(config)
+    worker.resume()
+
+
+worker.yielded.connect(on_yielded)
+worker.returned.connect(on_return)
+worker.start()
+
 
 @magic_factory(
     auto_call=True,
@@ -83,104 +234,14 @@ def config_magic_widget(
     # estimatedPlateWidth... is a string
     # (since it's a Label widget), so it needs
     # to be converted to a float
-) -> List[LayerDataTuple]:
-
-    # Check if the image is empty
-    if layer is None:
-        return
-
-    # Get the current frame the napari viewer is on
-    frameNumber = int(layer._dims_point[0])
-
-    # Get the current frame
-    rawFrame = layer.data[frameNumber, :, :, :]
-
-    # Crop the frame
-    frame = rawFrame[
-        crop[0] : crop[1],
-        crop[2] : crop[3],
-        :,
-    ]
-
-    # Mirror the frame if needed
-    if mirror:
-        frame = np.flip(frame, axis=1)
-
-    # By this point, frame should be an RGB scaled 0-255
-
-    # Preview the frame
-    frameLayer = (
-        frame,
-        {"name": "Frame"},
-        "image",
-    )
-
-    # Get mask and contours
-    # TODO: Area filter
-    mask, contours = analyzer.getMaskAndContours(h, s, v, areaFilter, frame)
-
-    # Preview the mask
-    maskLayer = (
-        mask,
-        {
-            "name": "Mask",
-            "colormap": "green",
-            "contrast_limits": [0, 1],
-            "opacity": 0.5,
-        },
-        "image",
-    )
-
-    # Now lets add annotations
-
-    # Draw a box around the crop
-    boxVerticies = np.array(
-        [
-            [crop[0], crop[2]],
-            [crop[0], crop[3]],
-            [crop[1], crop[3]],
-            [crop[1], crop[2]],
-        ]
-    )
-    cropLayer = (
-        boxVerticies,
-        {"name": "Crop", "edge_color": "white"},
-        "shapes",
-    )
-
-    if contours == []:
-        return [maskLayer, cropLayer]
-
-    # Contours is a list of numpy arrays,
-    # and napari needs a single numpy array for
-    # the points layer, so we concatenate the list
-    # of numpy arrays into a single numpy array
-    contoursBigArray = np.concatenate(contours, axis=0)
-
-    # Now the contours
-    # Uncomment and add to return to preview contours
-    # contoursLayer = (
-    #     contoursBigArray,
-    #     {"name": "Contours", "face_color": "green"},
-    #     "points",
-    # )
-
-    # Draw a red line at the highest X pos
-    highestXPos = analyzer.getHighestXPosFromContoursBigArray(contoursBigArray)
-    highestXPosLayer = (
-        np.array(
-            [
-                [0, highestXPos],
-                [frame.shape[0], highestXPos],
-            ]
-        ),
-        {
-            "name": "Highest X Pos",
-            "edge_color": "red",
-            "shape_type": "line",
-            "edge_width": 5,
-        },
-        "Shapes",
-    )
-
-    return [frameLayer, maskLayer, cropLayer, highestXPosLayer]
+):
+    config = {
+        "layer": layer,
+        "crop": crop,
+        "mirror": mirror,
+        "h": h,
+        "s": s,
+        "v": v,
+        "areaFilter": areaFilter,
+    }
+    send_next_value(config)
