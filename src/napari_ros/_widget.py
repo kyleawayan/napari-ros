@@ -8,6 +8,7 @@ Replace code below according to your needs.
 """
 from typing import TYPE_CHECKING
 from typing import List
+import time
 
 import numpy as np
 from enum import Enum
@@ -53,6 +54,7 @@ def runHsvMaskAndReturnAnnotations():
     annotatedLayers: List[LayerDataTuple] = []
 
     while True:
+        time.sleep(0.5)
         new = yield annotatedLayers
 
         try:
@@ -181,6 +183,8 @@ class ConfigWidget(QWidget):
         self.worker.yielded.connect(self.on_yielded)
         self.worker.start()
 
+        self._viewer.dims.events.current_step.connect(self.onFrameChange)
+
         layout = QVBoxLayout()
 
         # Create button
@@ -189,6 +193,10 @@ class ConfigWidget(QWidget):
         layout.addWidget(button)
 
         self.setLayout(layout)
+
+    def onFrameChange(self, event):
+        currentFrameNumber = event.value
+        self.sendSampleConfigToWorker()
 
     def sendSampleConfigToWorker(self):
         config = {
@@ -205,7 +213,7 @@ class ConfigWidget(QWidget):
     def on_yielded(self, value):
         self.worker.pause()
 
-        if value is []:
+        if len(value) == 0:
             return
 
         currentLayers = self._viewer.layers
