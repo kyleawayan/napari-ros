@@ -6,8 +6,7 @@ see: https://napari.org/stable/plugins/guides.html?#widgets
 
 Replace code below according to your needs.
 """
-from typing import TYPE_CHECKING
-from typing import List
+from typing import TYPE_CHECKING, List, Dict
 import time
 
 import numpy as np
@@ -218,19 +217,22 @@ class ConfigWidget(QWidget):
 
         currentLayers = self._viewer.layers
 
-        # For now lets just put the frame layer
-        frameLayer = value[0]
+        # TODO: Make layer updating more efficient
+        # and don't use _add_layer_from_data
+        for returnedLayerTuple in value:
+            returnedLayerName = returnedLayerTuple[1]["name"]
+            foundLayer = False
 
-        # Add the frame layer if it doesn't exist
-        # Check if it exists by name
-        for layer in currentLayers:
-            if layer.name == "Frame":
-                # If it exists, update it
-                layer.data = frameLayer[0]
-                return
+            for layer in currentLayers:
+                if layer.name == returnedLayerName:
+                    foundLayer = True
+                    layer.data = returnedLayerTuple[0]
+                    break
 
-        # If it doesn't exist, add it
-        self._viewer.add_image(frameLayer[0], name=frameLayer[1]["name"])
+            if foundLayer:
+                continue
+
+            self._viewer._add_layer_from_data(*returnedLayerTuple)
 
     def send_next_value(self, config):
         self.worker.send(config)
