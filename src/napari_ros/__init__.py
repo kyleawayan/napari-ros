@@ -4,9 +4,9 @@ except ImportError:
     __version__ = "unknown"
 
 from ._reader import napari_get_reader
-from ._widget import config_magic_widget
+from ._widget import ConfigWidget
 
 __all__ = (
     "napari_get_reader",
-    "config_magic_widget",
+    "ConfigWidget",
 )

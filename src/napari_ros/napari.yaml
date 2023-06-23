@@ -5,13 +5,13 @@ contributions:
     - id: napari-ros.get_reader
       python_name: napari_ros._reader:napari_get_reader
       title: Open data with Rate of Spread
-    - id: napari-ros.make_config_magic_widget
-      python_name: napari_ros._widget:config_magic_widget
+    - id: napari-ros.make_config_widget
+      python_name: napari_ros._widget:ConfigWidget
       title: Make config magic widget
   readers:
     - command: napari-ros.get_reader
       accepts_directories: false
       filename_patterns: ["*.mp4"]
   widgets:
-    - command: napari-ros.make_config_magic_widget
+    - command: napari-ros.make_config_widget
       display_name: Analysis Config

@@ -10,11 +10,8 @@ from typing import TYPE_CHECKING
 from typing import List
 
 import numpy as np
-from magicgui import magic_factory
-from magicgui.widgets import Label
 from enum import Enum
 from .analyze.HSVMask.HSVMaskAnalyzer import HSVMaskAnalyzer
-from .analyze.HSVMask.drawUtils import offsetContoursBigArrayByCrop
 
 if TYPE_CHECKING:
     import napari
@@ -23,6 +20,7 @@ from napari.layers import Layer
 from napari.viewer import Viewer
 from napari.types import LayerDataTuple
 from napari.qt.threading import thread_worker
+from qtpy.QtWidgets import QWidget, QVBoxLayout, QPushButton
 
 # TODO: Load class based on method
 analyzer = HSVMaskAnalyzer()
@@ -32,26 +30,14 @@ class Methods(Enum):
     HSVMask = 0
 
 
-def calculateEstimatedPlateWidthCmAndUpdateLabelAndSetLabel(
+def calculateEstimatedPlateWidthCm(
     cropWidth: int,
     pixelsBetweenTwoMarkers: float,
     cmBetweenTwoMarkers: int,
-    label: Label,
 ):
     pixelsPerCm = pixelsBetweenTwoMarkers / cmBetweenTwoMarkers
     estimatedPlateWidthCm = round(cropWidth / pixelsPerCm, 2)
-    label.value = estimatedPlateWidthCm
-
-
-def _on_init(widget):
-    widget.changed.connect(
-        lambda x: calculateEstimatedPlateWidthCmAndUpdateLabelAndSetLabel(
-            widget.crop.value[2] - widget.crop.value[0],
-            widget.pixelsBetweenTwoMarkers.value,
-            widget.cmBetweenTwoMarkers.value,
-            widget.estimatedPlateWidthCm,
-        )
-    )
+    return estimatedPlateWidthCm
 
 
 hsvWidgetConfig = {
@@ -185,63 +171,43 @@ def runHsvMaskAndReturnAnnotations():
         annotatedLayers = [frameLayer, maskLayer, cropLayer, highestXPosLayer]
 
 
-# TODO: Load worker based on method
-worker = runHsvMaskAndReturnAnnotations()
+class ConfigWidget(QWidget):
+    def __init__(self, viewer: Viewer):
+        super().__init__()
+        self._viewer = viewer
 
+        # TODO: Load worker based on method
+        self.worker = runHsvMaskAndReturnAnnotations()
+        self.worker.yielded.connect(self.on_yielded)
+        self.worker.start()
 
-def on_yielded(value):
-    worker.pause()
-    # TODO: I need to somehow add these layers
-    # to the napari viewer
-    print(value)
+        layout = QVBoxLayout()
 
+        # Create button
+        button = QPushButton("Run")
+        button.clicked.connect(self.sendSampleConfigToWorker)
+        layout.addWidget(button)
 
-def on_return(value):
-    raise Exception("Should not return")
+        self.setLayout(layout)
 
+    def sendSampleConfigToWorker(self):
+        config = {
+            "layer": self._viewer.layers[0],
+            "crop": [800, 1000, 400, 1511],
+            "mirror": False,
+            "h": (0.00, 0.38),
+            "s": (0.49, 0.80),
+            "v": (0.86, 1.00),
+            "areaFilter": 10,
+        }
+        self.send_next_value(config)
 
-def send_next_value(config):
-    worker.send(config)
-    worker.resume()
+    def on_yielded(self, value):
+        self.worker.pause()
+        # For now lets just put the frame layer
+        frameLayer = value[0]
+        self._viewer.add_image(frameLayer[0])
 
-
-worker.yielded.connect(on_yielded)
-worker.returned.connect(on_return)
-worker.start()
-
-
-@magic_factory(
-    auto_call=True,
-    h=hsvWidgetConfig,
-    s=hsvWidgetConfig,
-    v=hsvWidgetConfig,
-    crop={"options": {"max": 2000, "step": 1}, "layout": "vertical"},
-    estimatedPlateWidthCm={"widget_type": "Label"},
-    widget_init=_on_init,
-)
-def config_magic_widget(
-    layer: Layer,
-    method=Methods.HSVMask,
-    h=(0.00, 0.38),
-    s=(0.49, 0.80),
-    v=(0.86, 1.00),
-    crop=[800, 1000, 400, 1511],  # top, bottom, left, right
-    areaFilter=10,
-    pixelsBetweenTwoMarkers=10,
-    cmBetweenTwoMarkers=5.00,
-    mirror=False,
-    estimatedPlateWidthCm=0,
-    # estimatedPlateWidth... is a string
-    # (since it's a Label widget), so it needs
-    # to be converted to a float
-):
-    config = {
-        "layer": layer,
-        "crop": crop,
-        "mirror": mirror,
-        "h": h,
-        "s": s,
-        "v": v,
-        "areaFilter": areaFilter,
-    }
-    send_next_value(config)
+    def send_next_value(self, config):
+        self.worker.send(config)
+        self.worker.resume()
