@@ -156,6 +156,19 @@ class ConfigWidget(QWidget):
         super().__init__()
         self._viewer = viewer
 
+        # Sample config
+        self.config = {
+            "layer": self._viewer.layers[0],
+            "crop": [577, 629, 320, 958],
+            "mirror": True,
+            "h": (0.00, 0.38),
+            "s": (0.275, 0.80),
+            "v": (0.9, 1.00),
+            "areaFilter": 10,
+        }
+        # TODO: Get from napari
+        self.imageSequenceDirectory = "/Users/kyle/Desktop/mock ros videos/DSC_0357_Test_No26_720_2997FPS"
+
         # TODO: Load worker based on method
         self.worker = runHsvMaskAndReturnAnnotations()
         self.worker.yielded.connect(self.on_yielded)
@@ -186,16 +199,7 @@ class ConfigWidget(QWidget):
         self.sendSampleConfigToWorker()
 
     def sendSampleConfigToWorker(self):
-        config = {
-            "layer": self._viewer.layers[0],
-            "crop": [800, 1000, 400, 1511],
-            "mirror": True,
-            "h": (0.00, 0.38),
-            "s": (0.275, 0.80),
-            "v": (0.9, 1.00),
-            "areaFilter": 10,
-        }
-        self.send_next_value(config)
+        self.send_next_value(self.config)
 
     def on_yielded(self, value):
         self.worker.pause()
