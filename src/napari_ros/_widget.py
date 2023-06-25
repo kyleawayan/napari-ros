@@ -69,7 +69,7 @@ def runHsvMaskAndReturnAnnotations():
 
         # Check if the image is empty
         if layer is None:
-            return
+            continue
 
         # Get the current frame the napari viewer is on
         frameNumber = int(layer._dims_point[0])
@@ -133,7 +133,7 @@ def runHsvMaskAndReturnAnnotations():
         )
 
         if contours == []:
-            return [maskLayer, cropLayer]
+            contours = np.array([[[0, 0]]])
 
         # Contours is a list of numpy arrays,
         # and napari needs a single numpy array for
