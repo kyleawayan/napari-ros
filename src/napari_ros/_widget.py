@@ -12,6 +12,7 @@ import time
 import numpy as np
 from enum import Enum
 from .analyze.HSVMask.HSVMaskAnalyzer import HSVMaskAnalyzer
+from .analyze.HSVMask.analyzeModal import AnalyzeModal
 
 if TYPE_CHECKING:
     import napari
@@ -191,7 +192,16 @@ class ConfigWidget(QWidget):
         button.clicked.connect(self.sendSampleConfigToWorker)
         layout.addWidget(button)
 
+        # Create "Analyze" button
+        analyzeButton = QPushButton("Analyze")
+        analyzeButton.clicked.connect(self.runAnalysis)
+        layout.addWidget(analyzeButton)
+
         self.setLayout(layout)
+
+    def runAnalysis(self):
+        dialog = AnalyzeModal(self)
+        dialog.exec_()
 
     def onFrameChange(self, event):
         currentFrameNumber = event.value
