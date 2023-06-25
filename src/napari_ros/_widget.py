@@ -78,30 +78,23 @@ def runHsvMaskAndReturnAnnotations():
         # Get the current frame
         rawFrame = layer.data[frameNumber, :, :, :]
 
-        # Crop the frame
-        frame = rawFrame[
-            crop[0] : crop[1],
-            crop[2] : crop[3],
-            :,
-        ]
+        (
+            frame,
+            mask,
+            contours,
+            contoursBigArray,
+            highestXPos,
+        ) = analyzer.completelyAnalyzeFrame(
+            rawFrame, crop, mirror, h, s, v, areaFilter
+        )
 
-        # Mirror the frame if needed
-        if mirror:
-            frame = np.flip(frame, axis=1)
-
-        # By this point, frame should be an RGB scaled 0-255
+        # Now lets add annotations
 
         # Preview the frame
         frameLayer = (
             frame,
             {"name": "Frame"},
             "image",
-        )
-
-        # Get mask and contours
-        # TODO: Area filter
-        mask, contours = analyzer.getMaskAndContours(
-            h, s, v, areaFilter, frame
         )
 
         # Preview the mask
@@ -115,8 +108,6 @@ def runHsvMaskAndReturnAnnotations():
             },
             "image",
         )
-
-        # Now lets add annotations
 
         # Draw a box around the crop
         boxVerticies = np.array(
@@ -133,16 +124,6 @@ def runHsvMaskAndReturnAnnotations():
             "shapes",
         )
 
-        if contours == []:
-            contours = np.array([[[0, 0]]])
-
-        # Contours is a list of numpy arrays,
-        # and napari needs a single numpy array for
-        # the points layer, so we concatenate the list
-        # of numpy arrays into a single numpy array
-        contoursBigArray = np.concatenate(contours, axis=0)
-
-        # Now the contours
         # Uncomment and add to return to preview contours
         # contoursLayer = (
         #     contoursBigArray,
@@ -151,9 +132,6 @@ def runHsvMaskAndReturnAnnotations():
         # )
 
         # Draw a red line at the highest X pos
-        highestXPos = analyzer.getHighestXPosFromContoursBigArray(
-            contoursBigArray
-        )
         highestXPosLayer = (
             np.array(
                 [
