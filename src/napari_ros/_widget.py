@@ -201,10 +201,10 @@ class ConfigWidget(QWidget):
         config = {
             "layer": self._viewer.layers[0],
             "crop": [800, 1000, 400, 1511],
-            "mirror": False,
+            "mirror": True,
             "h": (0.00, 0.38),
-            "s": (0.49, 0.80),
-            "v": (0.86, 1.00),
+            "s": (0.275, 0.80),
+            "v": (0.9, 1.00),
             "areaFilter": 10,
         }
         self.send_next_value(config)
