@@ -35,8 +35,24 @@ class HSVMaskAnalyzer:
         """
         Get the highest x position of the contours.
         Contours should be a numpy array of shape (n, 2): (row, column)
+        Note this is not used anymore as just using the boolean mask is more efficient.
         """
         return contoursBigArray[:, 1].max()
+
+    def getHighestXPosFromBinaryMask(self, mask: np.ndarray):
+        """
+        Get the highest x position using the binary mask.
+        mask should be a boolean numpy array.
+        """
+        # Find the indices of the True values
+        indices = np.where(mask)
+
+        # If there are no True values, return 0
+        if len(indices[1]) == 0:
+            return 0
+
+        # Get the highest index on the X axis
+        return indices[1].max()
 
     def completelyAnalyzeFrame(
         self,
@@ -65,19 +81,7 @@ class HSVMaskAnalyzer:
         # TODO: Area filter
         mask, contours = self.getMaskAndContours(h, s, v, areaFilter, frame)
 
-        if contours == []:
-            # No contours found,
-            # so we just return a single point at (0, 0)
-            # so np.concatenate doesn't fail
-            contours = np.array([[[0, 0]]])
+        # Get the highest x position of the mask
+        highestXPos = self.getHighestXPosFromBinaryMask(mask)
 
-        # Contours is a list of numpy arrays,
-        # and napari needs a single numpy array for
-        # the points layer, so we concatenate the list
-        # of numpy arrays into a single numpy array
-        contoursBigArray = np.concatenate(contours, axis=0)
-
-        # Get the highest x position of the contours
-        highestXPos = self.getHighestXPosFromContoursBigArray(contoursBigArray)
-
-        return frame, mask, contours, contoursBigArray, highestXPos
+        return frame, mask, highestXPos

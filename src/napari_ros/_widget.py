@@ -78,13 +78,7 @@ def runHsvMaskAndReturnAnnotations():
         # Get the current frame
         rawFrame = layer.data[frameNumber, :, :, :]
 
-        (
-            frame,
-            mask,
-            contours,
-            contoursBigArray,
-            highestXPos,
-        ) = analyzer.completelyAnalyzeFrame(
+        frame, mask, highestXPos = analyzer.completelyAnalyzeFrame(
             rawFrame, crop, mirror, h, s, v, areaFilter
         )
 
@@ -123,13 +117,6 @@ def runHsvMaskAndReturnAnnotations():
             {"name": "Crop", "edge_color": "white"},
             "shapes",
         )
-
-        # Uncomment and add to return to preview contours
-        # contoursLayer = (
-        #     contoursBigArray,
-        #     {"name": "Contours", "face_color": "green"},
-        #     "points",
-        # )
 
         # Draw a red line at the highest X pos
         highestXPosLayer = (

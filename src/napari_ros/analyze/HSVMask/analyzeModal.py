@@ -39,8 +39,6 @@ def analyzeImageSequence():
         (
             frame,
             mask,
-            contours,
-            contoursBigArray,
             highestXPosForThisFrame,
         ) = analyzer.completelyAnalyzeFrame(
             image,
