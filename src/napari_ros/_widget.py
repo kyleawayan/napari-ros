@@ -13,6 +13,7 @@ import numpy as np
 from enum import Enum
 from .analyze.HSVMask.HSVMaskAnalyzer import HSVMaskAnalyzer
 from .analyze.HSVMask.analyzeModal import AnalyzeModal
+from .analyze.HSVMask.configWidget import HSVMaskConfigWidget
 
 if TYPE_CHECKING:
     import napari
@@ -164,6 +165,9 @@ class ConfigWidget(QWidget):
         self._viewer.dims.events.current_step.connect(self.onFrameChange)
 
         layout = QVBoxLayout()
+
+        # Add config widget (for HSV for now)
+        layout.addWidget(HSVMaskConfigWidget(self))
 
         # Create button
         button = QPushButton("Run")
