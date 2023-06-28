@@ -2,11 +2,14 @@ import time
 import numpy as np
 from typing import List
 
+from napari.layers import Layer
 from napari.types import LayerDataTuple
 from napari.qt.threading import thread_worker
 
 from .HSVMaskAnalyzer import HSVMaskAnalyzer
 from .analyzeModal import AnalyzeModal
+from .parametersWidget import HSVMaskParametersWidget
+from .types import HSVMaskConfigType
 
 from qtpy.QtWidgets import QWidget, QVBoxLayout, QPushButton
 from qtpy.QtCore import QTimer
@@ -129,14 +132,16 @@ class HSVMaskConfigWidget(QWidget):
         super().__init__(parent)
         self._viewer = parent._viewer
 
-        self.config = {
+        self.config: HSVMaskConfigType = {
             "layer": self._viewer.layers[0],
             "crop": [577, 629, 320, 958],
             "mirror": True,
-            "h": (0.00, 0.38),
-            "s": (0.275, 0.80),
-            "v": (0.9, 1.00),
+            "h": [0.00, 0.38],
+            "s": [0.275, 0.80],
+            "v": [0.9, 1.00],
             "areaFilter": 10,
+            "pixelsInUnit": 10,
+            "cmApart": 4.00,
         }
 
         # TODO: Get from napari
@@ -149,6 +154,16 @@ class HSVMaskConfigWidget(QWidget):
         self._viewer.dims.events.current_step.connect(self.onFrameChange)
 
         layout = QVBoxLayout()
+
+        # Add parameters widget
+        parametersWidget = HSVMaskParametersWidget(self)
+
+        # Note this signal does not send anything.
+        # The config is passed by reference already
+        # and can be edited straight from the widget
+        parametersWidget.valueChanged.connect(self.sendConfigToWorker)
+
+        layout.addWidget(parametersWidget)
 
         # Create "Analyze" button
         analyzeButton = QPushButton("Analyze")
