@@ -9,6 +9,7 @@ from .HSVMaskAnalyzer import HSVMaskAnalyzer
 from .analyzeModal import AnalyzeModal
 
 from qtpy.QtWidgets import QWidget, QVBoxLayout, QPushButton
+from qtpy.QtCore import QTimer
 
 analyzer = HSVMaskAnalyzer()
 
@@ -149,15 +150,14 @@ class HSVMaskConfigWidget(QWidget):
 
         layout = QVBoxLayout()
 
-        # Create button
-        button = QPushButton("Run")
-        button.clicked.connect(self.sendSampleConfigToWorker)
-        layout.addWidget(button)
-
         # Create "Analyze" button
         analyzeButton = QPushButton("Analyze")
         analyzeButton.clicked.connect(self.runAnalysis)
         layout.addWidget(analyzeButton)
+
+        # Send config to worker to create initial annotations
+        # Add a delay so the worker has time to start
+        QTimer.singleShot(2000, self.sendConfigToWorker)
 
         self.setLayout(layout)
 
@@ -167,9 +167,9 @@ class HSVMaskConfigWidget(QWidget):
 
     def onFrameChange(self, event):
         currentFrameNumber = event.value
-        self.sendSampleConfigToWorker()
+        self.sendConfigToWorker()
 
-    def sendSampleConfigToWorker(self):
+    def sendConfigToWorker(self):
         self.send_next_value(self.config)
 
     def on_yielded(self, value):
