@@ -9,8 +9,10 @@ from qtpy.QtWidgets import (
     QSlider,
     QSpinBox,
 )
+from superqt import QLabeledDoubleRangeSlider
 import numpy as np
 from .types import HSVMaskConfigType
+from typing import List
 
 
 def calculatePlateWidth(cropWidth: int, cmApart: float, pixelsInUnit: int):
@@ -97,25 +99,24 @@ class HSVMaskParametersWidget(QWidget):
             )
             layout.addWidget(spinBox)
 
-        # SliderWithNumber widgets for H max, H min, S max, S min, V max, V min
+        # SliderWithNumber widgets for H min-max, S min-max, V min-max
         hsvLabel = QLabel("HSV")
         layout.addWidget(hsvLabel)
 
         for i, chooseHsv in enumerate(["h", "s", "v"]):
             configToEdit = self.config[chooseHsv]
-            for j, lowOrHigh in enumerate(["low", "high"]):
-                hsvSliderLabel = QLabel(f"{chooseHsv} {lowOrHigh}")
-                layout.addWidget(hsvSliderLabel)
-                slider = SliderWithNumber()
-                slider.setMaximum(100)
-                # Multiply/divide by 100 because the slider only supports ints
-                slider.setValue(configToEdit[j] * 100)
-                slider.valueChanged.connect(
-                    lambda x, chooseHsv=chooseHsv, j=j: self.updateHSVState(
-                        chooseHsv, j, x / 100
-                    )
+            hsvSliderLabel = QLabel(chooseHsv)
+            layout.addWidget(hsvSliderLabel)
+
+            slider = QLabeledDoubleRangeSlider(Qt.Orientation.Horizontal)
+            slider.setRange(0, 1)
+            slider.setValue([configToEdit[0], configToEdit[1]])
+            slider.valueChanged.connect(
+                lambda newValue, chooseHsv=chooseHsv: self.updateHSVState(
+                    chooseHsv, [newValue[0], newValue[1]]
                 )
-                layout.addWidget(slider)
+            )
+            layout.addWidget(slider)
 
         # Width between markers
         widthBetweenMarkersLabel = QLabel(
@@ -178,9 +179,8 @@ class HSVMaskParametersWidget(QWidget):
         # Emit valueChanged signal to update annotations
         self.valueChanged.emit()
 
-    def updateHSVState(self, chooseHsv: str, high: bool, newValue: int):
-        lowOrHigh = 1 if high else 0
-        self.config[chooseHsv][lowOrHigh] = newValue
+    def updateHSVState(self, chooseHsv: str, newValue: List[float]):
+        self.config[chooseHsv] = newValue
         self.runSettingsChangeCallback()
 
     def updateAreaFilterState(self, newValue: int):
