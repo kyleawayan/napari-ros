@@ -136,14 +136,14 @@ class HSVMaskConfigWidget(QWidget):
 
         self.config: HSVMaskConfigType = {
             "layer": self._viewer.layers[0],
-            "crop": [577, 629, 320, 958],
+            "crop": [960, 987, 511, 1496],
             "mirror": True,
-            "h": [0.00, 0.38],
-            "s": [0.275, 0.80],
-            "v": [0.9, 1.00],
+            "h": [0.0, 0.32407407407407407],
+            "s": [0.0, 0.6620370370370371],
+            "v": [0.9, 1.0],
             "areaFilter": 10,
-            "pixelsInUnit": 10,
-            "cmApart": 4.00,
+            "pixelsInUnit": 4,
+            "cmApart": 4.0,
         }
 
         self.imageSequenceDirectory = self._viewer.layers[0].source.path
