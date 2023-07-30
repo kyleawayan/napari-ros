@@ -132,6 +132,8 @@ class HSVMaskConfigWidget(QWidget):
         super().__init__(parent)
         self._viewer = parent._viewer
 
+        # Layer 0 should be the image sequence
+
         self.config: HSVMaskConfigType = {
             "layer": self._viewer.layers[0],
             "crop": [577, 629, 320, 958],
@@ -144,8 +146,7 @@ class HSVMaskConfigWidget(QWidget):
             "cmApart": 4.00,
         }
 
-        # TODO: Get from napari
-        self.imageSequenceDirectory = "/Users/kyle/Desktop/mock ros videos/DSC_0357_Test_No26_720_2997FPS"
+        self.imageSequenceDirectory = self._viewer.layers[0].source.path
 
         self.worker = runHsvMaskAndReturnAnnotations()
         self.worker.yielded.connect(self.on_yielded)
