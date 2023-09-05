@@ -143,7 +143,8 @@ class HSVMaskConfigWidget(QWidget):
             "v": [0.9, 1.0],
             "areaFilter": 10,
             "pixelsInUnit": 4,
-            "cmApart": 4.0,
+            "cmApart": 4.5,
+            "fps": 59.94
         }
 
         self.imageSequenceDirectory = self._viewer.layers[0].source.path
