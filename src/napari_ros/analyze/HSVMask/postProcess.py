@@ -1,7 +1,9 @@
 import pandas as pd
 import numpy as np
+import matplotlib
+matplotlib.use("Agg", force=True)
 import matplotlib.pyplot as plt
-import os
+import multiprocessing
 
 def highestXPosListToPd(highestXPosList: list):
     df = pd.DataFrame(columns=['frame', 'highestXPos'])
@@ -37,14 +39,24 @@ def createSecondsColumn(df: pd.DataFrame, fps: float):
     df['seconds'] = df['frame'] / fps
     return df
 
-def createHighestXPosPlot(df: pd.DataFrame, title: str):
-    # Line plot
-    fig, ax = plt.subplots()
+def plotXPos(ax, df: pd.DataFrame, title: str):
+    # Line plot for x pos
     ax.plot(df['seconds'], df['highestXPos'])
     ax.set(xlabel='seconds', ylabel='highestXPos', title=title)
-    ax.grid()
+    out = ax.grid()
 
-    return fig
+    print("plotXPos done")
+    return out
+
+def createAndSavePlots(args):
+    df, title, exportDir = args
+
+    fig, ax = plt.subplots()
+    plotXPos(ax, df, title)
+    fig.savefig(f'{exportDir}/highestXPos.png')
+
+    print("createAndSavePlots done")
+    return
 
 def postProcess(highestXPosList: list, pixelsInUnit, cmApart, fps, title: str, exportDir: str):
     # Auto crop
@@ -63,12 +75,12 @@ def postProcess(highestXPosList: list, pixelsInUnit, cmApart, fps, title: str, e
     print("convert pixels to cm")
     df = convertPxToCm(df, pixelsInUnit, cmApart)
 
-    # Create plots
-    print("create plots")
-    highestXPosPlot = createHighestXPosPlot(df, title)
-
     # Export CSV and plots to exportDir
     print("exporting")
 
     df.to_csv(f'{exportDir}/highestXPos.csv', mode="w")
-    highestXPosPlot.savefig(f'{exportDir}/highestXPos.png')
+
+    # Matplotlib savefig doesn't work in a thread
+    # https://britishgeologicalsurvey.github.io/science/python-forking-vs-spawn/
+    with multiprocessing.get_context("spawn").Pool() as pool:
+        pool.map(createAndSavePlots, [(df, title, exportDir)])
