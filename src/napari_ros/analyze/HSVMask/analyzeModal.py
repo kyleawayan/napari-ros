@@ -65,7 +65,7 @@ def analyzeImageSequence():
     status = "post processing data"
     yield status
 
-    postProcess(highestXPos, config["pixelsInUnit"], config["cmApart"], config["fps"], arguments["title"], dataExportDir)
+    postProcess(highestXPos, config, arguments["title"], dataExportDir)
 
     return
 

@@ -4,6 +4,15 @@ import matplotlib
 matplotlib.use("Agg", force=True)
 import matplotlib.pyplot as plt
 import multiprocessing
+import json
+
+# Allow for JSON encoding of non-JSON serializable objects like numpy
+class JSONEncoderCustom(json.JSONEncoder):
+    def default(self, obj):
+        try:
+            return super().default(obj)
+        except TypeError:
+            return str(obj)
 
 def highestXPosListToPd(highestXPosList: list):
     df = pd.DataFrame(columns=['frame', 'highestXPos'])
@@ -76,7 +85,25 @@ def createAndSavePlots(args):
     print("createAndSavePlots done")
     return
 
-def postProcess(highestXPosList: list, pixelsInUnit, cmApart, fps, title: str, exportDir: str):
+def gatherStatistics(df: pd.DataFrame):
+    """
+    Returns a dictionary of statistics
+    """
+    stats = {}
+
+    stats["mean"] = df['highestXPosSmoothCmSpeed'].mean()
+    stats["median"] = df['highestXPosSmoothCmSpeed'].median()
+    stats["std"] = df['highestXPosSmoothCmSpeed'].std()
+    stats["min"] = df['highestXPosSmoothCmSpeed'].min()
+    stats["max"] = df['highestXPosSmoothCmSpeed'].max()
+
+    return stats
+
+def postProcess(highestXPosList: list, config, title: str, exportDir: str):
+    pixelsInUnit = config["pixelsInUnit"]
+    cmApart = config["cmApart"]
+    fps = config["fps"]
+
     # Auto crop
     print("auto crop")
     highestXPosList = autoCrop(highestXPosList)
@@ -101,10 +128,22 @@ def postProcess(highestXPosList: list, pixelsInUnit, cmApart, fps, title: str, e
     print("measure speed")
     measureSpeed(df, "highestXPosSmoothCm")
 
-    # Export CSV and plots to exportDir
-    print("exporting")
-
+    # Export CSV
+    print("exporting csv")
     df.to_csv(f'{exportDir}/highestXPos.csv', mode="w")
+
+    # Metadata
+    metadata = {}
+    metadata["config"] = config
+    metadata["highestXPosSmoothCmSpeedStats"] = gatherStatistics(df)
+    metadata["title"] = title
+    metadata["exportDir"] = exportDir
+    # TODO: Store latest commit ID
+
+    # Export metadata into JSON
+    print("exporting metadata")
+    with open(f'{exportDir}/metadata.json', 'w') as f:
+        json.dump(metadata, f, cls=JSONEncoderCustom, indent=4)
 
     # Matplotlib savefig doesn't work in a thread
     # https://britishgeologicalsurvey.github.io/science/python-forking-vs-spawn/
