@@ -5,6 +5,7 @@ matplotlib.use("Agg", force=True)
 import matplotlib.pyplot as plt
 import multiprocessing
 import json
+from napari_ros import _version
 
 # Allow for JSON encoding of non-JSON serializable objects like numpy
 class JSONEncoderCustom(json.JSONEncoder):
@@ -138,7 +139,7 @@ def postProcess(highestXPosList: list, config, title: str, exportDir: str):
     metadata["highestXPosSmoothCmSpeedStats"] = gatherStatistics(df)
     metadata["title"] = title
     metadata["exportDir"] = exportDir
-    # TODO: Store latest commit ID
+    metadata["version"] = _version.__version__
 
     # Export metadata into JSON
     print("exporting metadata")
