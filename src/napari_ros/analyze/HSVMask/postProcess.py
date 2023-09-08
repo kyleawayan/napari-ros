@@ -31,19 +31,19 @@ def autoCrop(highestXPosList: list) -> list:
     
     return dataTrim.tolist()
 
-def convertPxToCm(df: pd.DataFrame, pixelsInUnit, cmApart):
-    df['highestXPos'] = df['highestXPos'] / pixelsInUnit * cmApart
-    return df
+def convertPxToCm(df: pd.DataFrame, column: str, pixelsInUnit, cmApart):
+    df[column + "Cm"] = df[column] / pixelsInUnit * cmApart
 
 def createSecondsColumn(df: pd.DataFrame, fps: float):
     df['seconds'] = df['frame'] / fps
-    return df
+
+def smoothHighestXPos(df: pd.DataFrame, column: str, windowSize: int):
+    df[column + "Smooth"] = df[column].rolling(window=windowSize).mean()
 
 def plotXPos(ax, df: pd.DataFrame, title: str):
     # Line plot for x pos
-    ax.plot(df['seconds'], df['highestXPos'])
-    ax.set(xlabel='seconds', ylabel='highestXPos', title=title)
-    out = ax.grid()
+    ax.plot(df['seconds'], df['highestXPosSmoothCm'])
+    out = ax.set(title=title)
 
     print("plotXPos done")
     return out
@@ -69,11 +69,15 @@ def postProcess(highestXPosList: list, pixelsInUnit, cmApart, fps, title: str, e
 
     # Create seconds column
     print("create seconds column")
-    df = createSecondsColumn(df, fps)
+    createSecondsColumn(df, fps)
+
+    # Smoothen highestXPos
+    print("smoothen highestXPos")
+    smoothHighestXPos(df, "highestXPos", 100)
 
     # Convert pixels to cm
-    print("convert pixels to cm")
-    df = convertPxToCm(df, pixelsInUnit, cmApart)
+    print("convert pixels to cm", pixelsInUnit, cmApart)
+    convertPxToCm(df, "highestXPosSmooth", pixelsInUnit, cmApart)
 
     # Export CSV and plots to exportDir
     print("exporting")
