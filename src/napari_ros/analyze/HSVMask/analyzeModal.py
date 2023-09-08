@@ -55,7 +55,6 @@ def analyzeImageSequence():
             config["h"],
             config["s"],
             config["v"],
-            config["areaFilter"],
         )
 
         highestXPos.append(highestXPosForThisFrame)

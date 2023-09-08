@@ -183,10 +183,6 @@ class HSVMaskParametersWidget(QWidget):
         self.config[chooseHsv] = newValue
         self.runSettingsChangeCallback()
 
-    def updateAreaFilterState(self, newValue: int):
-        self.config["areaFilter"] = newValue
-        self.runSettingsChangeCallback()
-
     def updateCropState(self, cropIdx: int, newValue: int):
         self.config["crop"][cropIdx] = newValue
         self.runSettingsChangeCallback()

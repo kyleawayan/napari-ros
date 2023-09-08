@@ -43,7 +43,6 @@ def runHsvMaskAndReturnAnnotations():
             h = new["h"]
             s = new["s"]
             v = new["v"]
-            areaFilter = new["areaFilter"]
         except:
             continue
 
@@ -58,7 +57,7 @@ def runHsvMaskAndReturnAnnotations():
         rawFrame = layer.data[frameNumber, :, :, :]
 
         frame, mask, highestXPos = analyzer.completelyAnalyzeFrame(
-            rawFrame, crop, mirror, h, s, v, areaFilter
+            rawFrame, crop, mirror, h, s, v
         )
 
         # Now lets add annotations
@@ -141,7 +140,6 @@ class HSVMaskConfigWidget(QWidget):
             "h": [0.0, 0.32407407407407407],
             "s": [0.0, 0.6620370370370371],
             "v": [0.9, 1.0],
-            "areaFilter": 10,
             "pixelsInUnit": 4,
             "cmApart": 4.5,
             "fps": 59.94
