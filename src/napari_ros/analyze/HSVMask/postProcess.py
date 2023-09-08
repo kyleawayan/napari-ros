@@ -40,19 +40,37 @@ def createSecondsColumn(df: pd.DataFrame, fps: float):
 def smoothHighestXPos(df: pd.DataFrame, column: str, windowSize: int):
     df[column + "Smooth"] = df[column].rolling(window=windowSize).mean()
 
+def measureSpeed(df: pd.DataFrame, column: str):
+    """
+    Seconds column must be created first
+    """
+    df[column + "Speed"] = df[column].diff() / df['seconds'].diff()
+
 def plotXPos(ax, df: pd.DataFrame, title: str):
     # Line plot for x pos
-    ax.plot(df['seconds'], df['highestXPosSmoothCm'])
+    out = ax.plot(df['seconds'], df['highestXPosSmoothCm'])
     out = ax.set(title=title)
+    # x label is in plotXSpeed
+    out = ax.set(ylabel="leading edge pos. (cm)")
 
     print("plotXPos done")
+    return out
+
+def plotXSpeed(ax, df: pd.DataFrame, title: str):
+    # Line plot for x speed
+    out = ax.plot(df['seconds'], df['highestXPosSmoothCmSpeed'])
+    out = ax.set(title=title)
+    out = ax.set(xlabel="time (seconds)", ylabel="leading edge speed (cm/s)")
+
+    print("plotXSpeed done")
     return out
 
 def createAndSavePlots(args):
     df, title, exportDir = args
 
-    fig, ax = plt.subplots()
-    plotXPos(ax, df, title)
+    fig, axs = plt.subplots(2, 1, figsize=(10, 10))
+    plotXPos(axs[0], df, title + " Flame Leading Edge Position")
+    plotXSpeed(axs[1], df, title + " Flame Leading Edge Speed")
     fig.savefig(f'{exportDir}/highestXPos.png')
 
     print("createAndSavePlots done")
@@ -78,6 +96,10 @@ def postProcess(highestXPosList: list, pixelsInUnit, cmApart, fps, title: str, e
     # Convert pixels to cm
     print("convert pixels to cm", pixelsInUnit, cmApart)
     convertPxToCm(df, "highestXPosSmooth", pixelsInUnit, cmApart)
+
+    # Measure speed
+    print("measure speed")
+    measureSpeed(df, "highestXPosSmoothCm")
 
     # Export CSV and plots to exportDir
     print("exporting")
