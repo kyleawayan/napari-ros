@@ -119,7 +119,7 @@ def postProcess(highestXPosList: list, config, title: str, exportDir: str):
 
     # Smoothen highestXPos
     print("smoothen highestXPos")
-    smoothHighestXPos(df, "highestXPos", 100)
+    smoothHighestXPos(df, "highestXPos", 50)
 
     # Convert pixels to cm
     print("convert pixels to cm", pixelsInUnit, cmApart)
