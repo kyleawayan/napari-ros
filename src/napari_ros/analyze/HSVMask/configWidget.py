@@ -140,7 +140,7 @@ class HSVMaskConfigWidget(QWidget):
             "h": [0.0, 0.32407407407407407],
             "s": [0.0, 0.6620370370370371],
             "v": [0.9, 1.0],
-            "pixelsInUnit": 4,
+            "pixelsInUnit": 104,
             "cmApart": 4.5,
             "fps": 59.94
         }
