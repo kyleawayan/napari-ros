@@ -11,4 +11,4 @@ class HSVMaskConfigType(TypedDict):
     v: "list[float, float]"
     pixelsInUnit: int
     cmApart: float
-    areaFilter: int
+    fps: float

@@ -28,12 +28,12 @@ def getFlameMask(
     value_max = v[1]
 
     return (
-        (hue_img > hue_min)
-        & (hue_img < hue_max)
-        & (sat_img > sat_min)
-        & (sat_img < sat_max)
-        & (value_img > value_min)
-        & (value_img < value_max)
+        (hue_img >= hue_min)
+        & (hue_img <= hue_max)
+        & (sat_img >= sat_min)
+        & (sat_img <= sat_max)
+        & (value_img >= value_min)
+        & (value_img <= value_max)
     )
 
 

@@ -4,11 +4,14 @@ from qtpy.QtWidgets import QDialog, QWidget, QLabel, QGridLayout
 from .HSVMaskAnalyzer import HSVMaskAnalyzer
 from napari.qt.threading import thread_worker
 from pims import ImageSequence
+import os
 
 # Should produce the same results re-initializing the analyzer
 # here
 # TODO: Find a better way to do this
 analyzer = HSVMaskAnalyzer()
+
+from .postProcess import postProcess
 
 
 @thread_worker
@@ -20,12 +23,17 @@ def analyzeImageSequence():
         arguments = yield status
         # check if arguments have a config and imageSequenceDirectory key
         try:
-            if "config" in arguments and "imageSequenceDirectory" in arguments:
+            if "config" in arguments and "imageSequenceDirectory" in arguments and "title" in arguments:
                 config = arguments["config"]
                 imageSequenceDirectory = arguments["imageSequenceDirectory"]
+                title = arguments["title"]
                 break
         except:
             continue
+
+    # Make directory ../data/config["title"] (starting from imageSequenceDirectory)
+    dataExportDir = os.path.join(imageSequenceDirectory, os.pardir, "data", title)
+    os.makedirs(dataExportDir, exist_ok=True)
 
     status = "reading image sequence"
     yield status
@@ -47,21 +55,16 @@ def analyzeImageSequence():
             config["h"],
             config["s"],
             config["v"],
-            config["areaFilter"],
         )
 
         highestXPos.append(highestXPosForThisFrame)
         status = f"analyzing frame {len(highestXPos)}"
         yield status
 
-    # Export text file with highestXPos,
-    # one value per line
-    status = "exporting raw data"
+    status = "post processing data"
     yield status
 
-    with open(f"{imageSequenceDirectory}/highestXPos.txt", "w") as f:
-        for value in highestXPos:
-            f.write(f"{value}\n")
+    postProcess(highestXPos, config, arguments["title"], dataExportDir)
 
     return
 
@@ -106,9 +109,12 @@ class AnalyzeModal(QDialog):
         self.statusLabel.setText("done")
 
     def send_next_value(self, config, imageSequenceDirectory):
+        # title should be the name of the directory only 
+        titleOfPostProcess = os.path.basename(imageSequenceDirectory)
         self.worker.send(
             {
                 "config": config,
                 "imageSequenceDirectory": imageSequenceDirectory,
+                "title": titleOfPostProcess
             }
         )

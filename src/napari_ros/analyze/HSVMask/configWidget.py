@@ -43,7 +43,6 @@ def runHsvMaskAndReturnAnnotations():
             h = new["h"]
             s = new["s"]
             v = new["v"]
-            areaFilter = new["areaFilter"]
         except:
             continue
 
@@ -58,7 +57,7 @@ def runHsvMaskAndReturnAnnotations():
         rawFrame = layer.data[frameNumber, :, :, :]
 
         frame, mask, highestXPos = analyzer.completelyAnalyzeFrame(
-            rawFrame, crop, mirror, h, s, v, areaFilter
+            rawFrame, crop, mirror, h, s, v
         )
 
         # Now lets add annotations
@@ -132,20 +131,21 @@ class HSVMaskConfigWidget(QWidget):
         super().__init__(parent)
         self._viewer = parent._viewer
 
+        # Layer 0 should be the image sequence
+
         self.config: HSVMaskConfigType = {
             "layer": self._viewer.layers[0],
-            "crop": [577, 629, 320, 958],
+            "crop": [960, 987, 511, 1496],
             "mirror": True,
-            "h": [0.00, 0.38],
-            "s": [0.275, 0.80],
-            "v": [0.9, 1.00],
-            "areaFilter": 10,
-            "pixelsInUnit": 10,
-            "cmApart": 4.00,
+            "h": [0.0, 0.32407407407407407],
+            "s": [0.0, 0.6620370370370371],
+            "v": [0.9, 1.0],
+            "pixelsInUnit": 4,
+            "cmApart": 4.5,
+            "fps": 59.94
         }
 
-        # TODO: Get from napari
-        self.imageSequenceDirectory = "/Users/kyle/Desktop/mock ros videos/DSC_0357_Test_No26_720_2997FPS"
+        self.imageSequenceDirectory = self._viewer.layers[0].source.path
 
         self.worker = runHsvMaskAndReturnAnnotations()
         self.worker.yielded.connect(self.on_yielded)

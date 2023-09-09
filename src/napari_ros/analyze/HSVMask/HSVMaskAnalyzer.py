@@ -13,7 +13,6 @@ class HSVMaskAnalyzer:
         h: tuple[float, float],  # min, max, from 0 to 1
         s: tuple[float, float],
         v: tuple[float, float],
-        areaFilter: int,
         frame: np.ndarray,
     ):
         # Convert to HSV
@@ -62,7 +61,6 @@ class HSVMaskAnalyzer:
         h: tuple[float, float],
         s: tuple[float, float],
         v: tuple[float, float],
-        areaFilter: int,
     ):
         # Crop the frame
         frame = frame[
@@ -79,7 +77,7 @@ class HSVMaskAnalyzer:
 
         # Get mask and contours
         # TODO: Area filter
-        mask, contours = self.getMaskAndContours(h, s, v, areaFilter, frame)
+        mask, contours = self.getMaskAndContours(h, s, v, frame)
 
         # Get the highest x position of the mask
         highestXPos = self.getHighestXPosFromBinaryMask(mask)
