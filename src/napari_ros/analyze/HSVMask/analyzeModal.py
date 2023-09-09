@@ -109,10 +109,12 @@ class AnalyzeModal(QDialog):
         self.statusLabel.setText("done")
 
     def send_next_value(self, config, imageSequenceDirectory):
+        # title should be the name of the directory only 
+        titleOfPostProcess = os.path.basename(imageSequenceDirectory)
         self.worker.send(
             {
                 "config": config,
                 "imageSequenceDirectory": imageSequenceDirectory,
-                "title": "TestTemp"
+                "title": titleOfPostProcess
             }
         )
