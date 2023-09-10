@@ -43,15 +43,13 @@ def runHsvMaskAndReturnAnnotations():
             h = new["h"]
             s = new["s"]
             v = new["v"]
+            frameNumber = new["currentFrameNumber"]
         except:
             continue
 
         # Check if the image is empty
         if layer is None:
             continue
-
-        # Get the current frame the napari viewer is on
-        frameNumber = int(layer._dims_point[0])
 
         # Get the current frame
         rawFrame = layer.data[frameNumber, :, :, :]
@@ -131,6 +129,9 @@ class HSVMaskConfigWidget(QWidget):
         super().__init__(parent)
         self._viewer = parent._viewer
 
+        # Will be changed by dims.events.current_step
+        self.currentFrameNumber = -1
+
         # Layer 0 should be the image sequence
 
         self.config: HSVMaskConfigType = {
@@ -151,6 +152,7 @@ class HSVMaskConfigWidget(QWidget):
         self.worker.yielded.connect(self.on_yielded)
         self.worker.start()
 
+        self.currentFrameNumber = self._viewer.dims.current_step[0]
         self._viewer.dims.events.current_step.connect(self.onFrameChange)
 
         layout = QVBoxLayout()
@@ -161,7 +163,7 @@ class HSVMaskConfigWidget(QWidget):
         # Note this signal does not send anything.
         # The config is passed by reference already
         # and can be edited straight from the widget
-        parametersWidget.valueChanged.connect(self.sendConfigToWorker)
+        parametersWidget.valueChanged.connect(self.workerFrameAnalysis)
 
         layout.addWidget(parametersWidget)
 
@@ -172,7 +174,7 @@ class HSVMaskConfigWidget(QWidget):
 
         # Send config to worker to create initial annotations
         # Add a delay so the worker has time to start
-        QTimer.singleShot(2000, self.sendConfigToWorker)
+        QTimer.singleShot(2000, self.workerFrameAnalysis)
 
         self.setLayout(layout)
 
@@ -181,11 +183,15 @@ class HSVMaskConfigWidget(QWidget):
         dialog.exec_()
 
     def onFrameChange(self, event):
-        currentFrameNumber = event.value
-        self.sendConfigToWorker()
+        self.currentFrameNumber = event.value[0]
+        self.workerFrameAnalysis()
 
-    def sendConfigToWorker(self):
-        self.send_next_value(self.config)
+    def workerFrameAnalysis(self):
+        # Add current frame number to config dict, so we can send it to the worker
+        configToSend = self.config.copy()
+        configToSend["currentFrameNumber"] = self.currentFrameNumber
+        self.worker.send(configToSend)
+        self.worker.resume()
 
     def on_yielded(self, value):
         self.worker.pause()
@@ -211,7 +217,3 @@ class HSVMaskConfigWidget(QWidget):
                 continue
 
             self._viewer._add_layer_from_data(*returnedLayerTuple)
-
-    def send_next_value(self, config):
-        self.worker.send(config)
-        self.worker.resume()
