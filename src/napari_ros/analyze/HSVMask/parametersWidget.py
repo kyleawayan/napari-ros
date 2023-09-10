@@ -126,7 +126,7 @@ class HSVMaskParametersWidget(QWidget):
 
         self.widthBetweenMarkersSlider = SliderWithNumber()
         self.widthBetweenMarkersSlider.setMaximum(200)
-        self.widthBetweenMarkersSlider.setValue(self.config["cmApart"])
+        self.widthBetweenMarkersSlider.setValue(self.config["pixelsInUnit"])
         self.widthBetweenMarkersSlider.valueChanged.connect(
             lambda x: self.updateConversionState("pixelsInUnit", x)
         )
