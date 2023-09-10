@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import multiprocessing
 import json
 from napari_ros import _version
+import os
 
 # Allow for JSON encoding of non-JSON serializable objects like numpy
 class JSONEncoderCustom(json.JSONEncoder):
@@ -81,7 +82,9 @@ def createAndSavePlots(args):
     fig, axs = plt.subplots(2, 1, figsize=(10, 10))
     plotXPos(axs[0], df, title + " Flame Leading Edge Position")
     plotXSpeed(axs[1], df, title + " Flame Leading Edge Speed")
-    fig.savefig(f'{exportDir}/highestXPos.png')
+
+    figExportPath = os.path.join(exportDir, "highestXPos.png")
+    fig.savefig(figExportPath)
 
     print("createAndSavePlots done")
     return
@@ -131,7 +134,8 @@ def postProcess(highestXPosList: list, config, title: str, exportDir: str):
 
     # Export CSV
     print("exporting csv")
-    df.to_csv(f'{exportDir}/highestXPos.csv', mode="w")
+    csvExportPath = os.path.join(exportDir, "highestXPos.csv")
+    df.to_csv(csvExportPath, mode="w")
 
     # Metadata
     metadata = {}
@@ -143,7 +147,9 @@ def postProcess(highestXPosList: list, config, title: str, exportDir: str):
 
     # Export metadata into JSON
     print("exporting metadata")
-    with open(f'{exportDir}/metadata.json', 'w') as f:
+
+    jsonExportPath = os.path.join(exportDir, "metadata.json")
+    with open(jsonExportPath, 'w') as f:
         json.dump(metadata, f, cls=JSONEncoderCustom, indent=4)
 
     # Matplotlib savefig doesn't work in a thread
