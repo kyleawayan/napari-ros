@@ -8,11 +8,13 @@ from qtpy.QtWidgets import (
     QGridLayout,
     QSlider,
     QSpinBox,
+    QLineEdit
 )
 from superqt import QLabeledDoubleRangeSlider
 import numpy as np
 from .types import HSVMaskConfigType
 from typing import List
+from sympy import S
 
 
 def calculatePlateWidth(cropWidth: int, cmApart: float, pixelsInUnit: int):
@@ -119,18 +121,14 @@ class HSVMaskParametersWidget(QWidget):
             layout.addWidget(slider)
 
         # Width between markers
-        widthBetweenMarkersLabel = QLabel(
-            "Width between markers in video (px)"
-        )
+        widthBetweenMarkersLabel = QLabel("Width between markers in video (px)")
         layout.addWidget(widthBetweenMarkersLabel)
 
-        self.widthBetweenMarkersSlider = SliderWithNumber()
-        self.widthBetweenMarkersSlider.setMaximum(200)
-        self.widthBetweenMarkersSlider.setValue(self.config["pixelsInUnit"])
-        self.widthBetweenMarkersSlider.valueChanged.connect(
-            lambda x: self.updateConversionState("pixelsInUnit", x)
-        )
-        layout.addWidget(self.widthBetweenMarkersSlider)
+        self.widthBetweenMarkersInput = QLineEdit()
+        self.widthBetweenMarkersInput.setText(str(self.config["pixelsInUnit"]))
+        self.widthBetweenMarkersInput.textChanged.connect(self.handleWidthBetweenMarkersInput)
+        self.widthBetweenMarkersInput.editingFinished.connect(self.displayWidthBetweenMarkersCalculated)
+        layout.addWidget(self.widthBetweenMarkersInput)
 
         # Spin box to set cmApart
         cmApartLabel = QLabel("Width between markers in real life (cm)")
@@ -161,6 +159,17 @@ class HSVMaskParametersWidget(QWidget):
         self.runSettingsChangeCallback()
 
         self.setLayout(layout)
+
+    def handleWidthBetweenMarkersInput(self, expression: str):
+        try:
+            x = S(expression)
+            self.updateConversionState("pixelsInUnit", x)
+        except:
+            # an error occurred while parsing the expression
+            pass
+
+    def displayWidthBetweenMarkersCalculated(self):
+            self.widthBetweenMarkersInput.setText(str(self.config["pixelsInUnit"]))
 
     def runSettingsChangeCallback(self):
         # Re-calculate the estimated plate length
