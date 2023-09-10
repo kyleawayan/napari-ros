@@ -216,4 +216,4 @@ class HSVMaskConfigWidget(QWidget):
             if foundLayer:
                 continue
 
-            self._viewer._add_layer_from_data(*returnedLayerTuple)
+            self._viewer.add_layer(Layer.create(*returnedLayerTuple))
