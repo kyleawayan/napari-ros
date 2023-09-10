@@ -145,13 +145,8 @@ class HSVMaskParametersWidget(QWidget):
         )
         layout.addWidget(self.cmApartSpinBox)
 
-        # Estimate how long the plate is
-        self.estimatedPlateLength = (
-            self.config["cmApart"] * self.config["pixelsInUnit"]
-        )
-        self.plateLengthLabel = QLabel(
-            f"Based off the curent crop area, the estimated width of the plate will be {self.estimatedPlateLength} cm according to the conversion constants given."
-        )
+        self.estimatedPlateLength = -1
+        self.plateLengthLabel = QLabel()
         self.plateLengthLabel.setWordWrap(True)
         layout.addWidget(self.plateLengthLabel)
 
@@ -163,17 +158,19 @@ class HSVMaskParametersWidget(QWidget):
         # Add stretch so everything stays on top
         layout.addStretch()
 
+        self.runSettingsChangeCallback()
+
         self.setLayout(layout)
 
     def runSettingsChangeCallback(self):
         # Re-calculate the estimated plate length
         self.estimatedPlateLength = calculatePlateWidth(
-            self.config["crop"][2] - self.config["crop"][0],
+            self.config["crop"][3] - self.config["crop"][2],
             self.config["cmApart"],
             self.config["pixelsInUnit"],
         )
         self.plateLengthLabel.setText(
-            f"Based off the curent crop area, the estimated width of the plate will be {self.estimatedPlateLength} cm according to the conversion constants given."
+            f"Based off the current crop area, the estimated width of the plate will be {self.estimatedPlateLength} cm according to the conversion constants given."
         )
 
         # Emit valueChanged signal to update annotations
