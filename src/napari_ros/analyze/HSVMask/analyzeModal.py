@@ -16,7 +16,7 @@ from .postProcess import postProcess
 
 @thread_worker
 def analyzeImageSequence():
-    status = "invalid arguments"
+    status = "checking arguments..."
     arguments = {}
 
     while True:
