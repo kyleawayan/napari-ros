@@ -14,6 +14,9 @@ from .types import HSVMaskConfigType
 from qtpy.QtWidgets import QWidget, QVBoxLayout, QPushButton
 from qtpy.QtCore import QTimer
 
+import json
+import os
+
 analyzer = HSVMaskAnalyzer()
 
 
@@ -123,6 +126,23 @@ def calculateEstimatedPlateWidthCm(
     estimatedPlateWidthCm = round(cropWidth / pixelsPerCm, 2)
     return estimatedPlateWidthCm
 
+def fetchConfigFromUserSettings(path: str):
+    # Check if the config file exists
+    if not os.path.exists(path):
+        return None
+    
+    with open(path, "r") as f:
+        config = json.load(f)
+        return config
+
+# TODO: Use napari settings or some other better persistent storage
+def saveConfigToUserSettings(config: HSVMaskConfigType, path: str):
+    # Ignore layer
+    config.pop("layer", None)
+
+    # For now just save as a JSON file
+    with open(path, "w") as f:
+        json.dump(config, f, indent=4)
 
 class HSVMaskConfigWidget(QWidget):
     def __init__(self, parent: QWidget):
@@ -134,19 +154,26 @@ class HSVMaskConfigWidget(QWidget):
 
         # Layer 0 should be the image sequence
 
-        self.config: HSVMaskConfigType = {
-            "layer": self._viewer.layers[0],
-            "crop": [960, 987, 511, 1496],
-            "mirror": True,
-            "h": [0.0, 0.32407407407407407],
-            "s": [0.0, 0.6620370370370371],
-            "v": [0.9, 1.0],
-            "pixelsInUnit": 104,
-            "cmApart": 4.5,
-            "fps": 59.94
-        }
-
         self.imageSequenceDirectory = self._viewer.layers[0].source.path
+        self.configFilePath = os.path.join(self.imageSequenceDirectory, os.pardir, "napari_ros_last_config.json")
+
+        # Check if a config (from last time) exists
+        self.config = fetchConfigFromUserSettings(self.configFilePath)
+
+        if self.config is None:
+            self.config: HSVMaskConfigType = {
+                "layer": self._viewer.layers[0],
+                "crop": [960, 987, 511, 1496],
+                "mirror": True,
+                "h": [0.0, 0.32407407407407407],
+                "s": [0.0, 0.6620370370370371],
+                "v": [0.9, 1.0],
+                "pixelsInUnit": 104,
+                "cmApart": 4.5,
+                "fps": 59.94
+            }
+        else:
+            self.config["layer"] = self._viewer.layers[0]
 
         self.worker = runHsvMaskAndReturnAnnotations()
         self.worker.yielded.connect(self.on_yielded)
@@ -179,6 +206,10 @@ class HSVMaskConfigWidget(QWidget):
         self.setLayout(layout)
 
     def runAnalysis(self):
+        # Save config
+        saveConfigToUserSettings(self.config, self.configFilePath)
+
+        # Run analysis
         dialog = AnalyzeModal(self)
         dialog.exec_()
 

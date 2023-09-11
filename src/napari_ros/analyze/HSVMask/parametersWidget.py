@@ -163,6 +163,10 @@ class HSVMaskParametersWidget(QWidget):
     def handleWidthBetweenMarkersInput(self, expression: str):
         try:
             x = S(expression)
+
+            # Make sure answer is a integer
+            x = int(x)
+
             self.updateConversionState("pixelsInUnit", x)
         except:
             # an error occurred while parsing the expression
