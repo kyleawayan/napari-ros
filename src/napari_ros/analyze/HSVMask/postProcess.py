@@ -44,6 +44,8 @@ def autoCrop(highestXPosList: list) -> list:
 
 def convertPxToCm(df: pd.DataFrame, column: str, pixelsInUnit, cmApart):
     df[column + "Cm"] = df[column] / pixelsInUnit * cmApart
+    # Make sure we get real NaNs (weird behavior where some values are nan instead of NaN)
+    df[column + "Cm"] = df[column + "Cm"].astype(float)
 
 def createSecondsColumn(df: pd.DataFrame, fps: float):
     df['seconds'] = df['frame'] / fps
