@@ -97,4 +97,4 @@ The post processing successfully completes when the "Analyzing..." window says "
 
 Analysis is done! From there the napari windows can safely be closed.
 
-To run another test, start from step 2. Pick a different folder in the same directory of image sequence folders. The napari-ros plugin automatically loads the last parameters used (only if the next image sequence folder is right next to the previous one).
+To run another test, close all the napari windows and start from step 2. Pick a different folder in the same directory of image sequence folders. The napari-ros plugin automatically loads the last parameters used (only if the next image sequence folder is right next to the previous one).
