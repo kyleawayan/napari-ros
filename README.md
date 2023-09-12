@@ -33,6 +33,22 @@ To install latest development version :
 
     pip install git+https://github.com/kyleawayan/napari-ros.git
 
+## Creating New Version
+
+```sh
+# the tag will be used as the version string for your package
+# make it meaningful: https://semver.org/
+git tag -a v0.1.0 -m "v0.1.0"
+
+# make sure to use follow-tags so that the tag also gets pushed to github
+git push --follow-tags
+```
+
+Then, build the package:
+
+```py
+python -m build .
+```
 
 ## Contributing
 
