@@ -61,18 +61,23 @@ def runHsvMaskAndReturnAnnotations():
             rawFrame, crop, mirror, h, s, v
         )
 
+        # MIRROR ANNOTATIONS JUST FOR FIGURE SCREENSHOTS
+        mask = np.fliplr(mask)
+        highestXPos = mask.shape[1] - highestXPos
+
         # Now lets add annotations
 
-        # Preview the frame
-        frameLayer = (
-            frame,
-            {"name": "Frame"},
-            "image",
-        )
+        # Mask image layer
+        previewMask = np.zeros((rawFrame.shape[0], rawFrame.shape[1]))
+        start_point = (crop[0], crop[2])
+        previewMask[
+            start_point[0]:start_point[0]+mask.shape[0],
+            start_point[1]:start_point[1]+mask.shape[1]
+        ] = mask
 
         # Preview the mask
         maskLayer = (
-            mask,
+            previewMask,
             {
                 "name": "Mask",
                 "colormap": "green",
@@ -93,7 +98,7 @@ def runHsvMaskAndReturnAnnotations():
         )
         cropLayer = (
             boxVerticies,
-            {"name": "Crop", "edge_color": "white"},
+            {"name": "Crop", "edge_color": "white", "face_color": "transparent", "edge_width": 5, "opacity": 1},
             "shapes",
         )
 
@@ -101,8 +106,8 @@ def runHsvMaskAndReturnAnnotations():
         highestXPosLayer = (
             np.array(
                 [
-                    [0, highestXPos],
-                    [frame.shape[0], highestXPos],
+                    [0, highestXPos + crop[2]],
+                    [rawFrame.shape[0], highestXPos + crop[2]],
                 ]
             ),
             {
@@ -110,11 +115,12 @@ def runHsvMaskAndReturnAnnotations():
                 "edge_color": "red",
                 "shape_type": "line",
                 "edge_width": 5,
+                "opacity": 1,
             },
             "Shapes",
         )
 
-        annotatedLayers = [frameLayer, maskLayer, cropLayer, highestXPosLayer]
+        annotatedLayers = [maskLayer, cropLayer, highestXPosLayer]
 
 
 def calculateEstimatedPlateWidthCm(
