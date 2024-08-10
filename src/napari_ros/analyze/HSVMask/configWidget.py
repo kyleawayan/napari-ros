@@ -55,6 +55,12 @@ def runHsvMaskAndReturnAnnotations():
         if layer is None:
             continue
 
+        # If mirror, flip the frame in the napari image layer
+        if mirror:
+            layer.affine = np.array([[1.0, 0.0, 0.0], [0.0, -1.0, layer.data.shape[2]], [0.0, 0.0, 1.0]])
+        else:
+            layer.affine = np.array([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]])
+
         # Get the current frame
         rawFrame = layer.data[frameNumber, :, :, :]
 

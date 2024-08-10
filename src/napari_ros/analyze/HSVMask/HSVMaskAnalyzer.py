@@ -75,6 +75,10 @@ class HSVMaskAnalyzer:
         s: tuple[float, float],
         v: tuple[float, float],
     ):
+        # Mirror the frame if needed
+        if mirror:
+            frame = np.flip(frame, axis=1)
+
         frameWithOnlyXCrop = frame[
             crop[0] - cropXUpperBound : crop[1],
             crop[2] : crop[3],
@@ -89,10 +93,6 @@ class HSVMaskAnalyzer:
             crop[2] : crop[3],
             :,
         ]
-
-        # Mirror the frame if needed
-        if mirror:
-            frame = np.flip(frame, axis=1)
 
         # By this point, frame should be an RGB scaled 0-255
 
