@@ -55,7 +55,7 @@ class HSVMaskAnalyzer:
 
         # If there are no True values, return 0
         if len(indices[1]) == 0:
-            return 0
+            return [0, 0, 0, 0]
 
         # Get the bounding box
         return [
@@ -74,7 +74,13 @@ class HSVMaskAnalyzer:
         s: tuple[float, float],
         v: tuple[float, float],
     ):
-        maskWoCrop = self.getMask(h, s, v, frame) 
+        frameWithOnlyXCrop = frame[
+            :,
+            crop[2] : crop[3],
+            :,
+        ]
+
+        maskWithOnlyXCrop = self.getMask(h, s, v, frameWithOnlyXCrop) 
 
         # Crop the frame
         frame = frame[
@@ -94,9 +100,9 @@ class HSVMaskAnalyzer:
         mask = self.getMask(h, s, v, frame)
 
         # Get bounding box of mask WITHOUT CROP
-        boundingBoxWoCrop = self.getBoundingBoxFromBinaryMask(maskWoCrop)
+        boundingBoxWithOnlyXCrop = self.getBoundingBoxFromBinaryMask(maskWithOnlyXCrop)
 
         # Get the highest x position of the mask
         highestXPos = self.getHighestXPosFromBinaryMask(mask)
 
-        return frame, mask, highestXPos, boundingBoxWoCrop, maskWoCrop
+        return frame, mask, highestXPos, boundingBoxWithOnlyXCrop, maskWithOnlyXCrop

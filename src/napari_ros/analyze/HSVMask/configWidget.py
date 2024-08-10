@@ -57,17 +57,25 @@ def runHsvMaskAndReturnAnnotations():
         # Get the current frame
         rawFrame = layer.data[frameNumber, :, :, :]
 
-        frame, mask, highestXPos, boundingBoxWoCrop, maskWoCrop = analyzer.completelyAnalyzeFrame(
+        frame, mask, highestXPos, boundingBoxWithOnlyXCrop, maskWithOnlyXCrop = analyzer.completelyAnalyzeFrame(
             rawFrame, crop, mirror, h, s, v
         )
 
         # Now lets add annotations
 
-        # Mask image layer WITHOUT CROP
+        # Mask image layer
+        previewMask = np.zeros((rawFrame.shape[0], rawFrame.shape[1]))
+        start_point = (0, crop[2])
+        previewMask[
+            start_point[0]:start_point[0]+maskWithOnlyXCrop.shape[0],
+            start_point[1]:start_point[1]+maskWithOnlyXCrop.shape[1]
+        ] = maskWithOnlyXCrop
+
+        # Preview the mask
         maskWoCropLayer = (
-            maskWoCrop,
+            previewMask,
             {
-                "name": "Mask WITHOUT CROP",
+                "name": "Mask WITH ONLY X CROP",
                 "colormap": "green",
                 "contrast_limits": [0, 1],
                 "opacity": 0.5,
@@ -90,6 +98,21 @@ def runHsvMaskAndReturnAnnotations():
             "shapes",
         )
 
+        # Draw a box around the crop with only X crop
+        boxVerticies = np.array(
+            [
+                [0, crop[2]],
+                [0, crop[3]],
+                [rawFrame.shape[0], crop[3]],
+                [rawFrame.shape[0], crop[2]],
+            ]
+        )
+        cropLayerOnlyXCrop = (
+            boxVerticies,
+            {"name": "Crop ONLY X", "edge_color": "grey", "face_color": "transparent", "edge_width": 2, "opacity": 1},
+            "shapes",
+        )
+
         # Draw a red line at the highest X pos
         highestXPosLayer = (
             np.array(
@@ -108,18 +131,18 @@ def runHsvMaskAndReturnAnnotations():
             "Shapes",
         )
 
-        # Draw a blue box around the bounding box WITHOUT CROP
+        # Draw a blue box around the bounding box with only X crop offset
         boundingBoxWoCropLayer = (
             np.array(
                 [
-                    [boundingBoxWoCrop[0], boundingBoxWoCrop[2]],
-                    [boundingBoxWoCrop[0], boundingBoxWoCrop[3]],
-                    [boundingBoxWoCrop[1], boundingBoxWoCrop[3]],
-                    [boundingBoxWoCrop[1], boundingBoxWoCrop[2]],
+                    [boundingBoxWithOnlyXCrop[0], boundingBoxWithOnlyXCrop[2] + crop[2]],
+                    [boundingBoxWithOnlyXCrop[0], boundingBoxWithOnlyXCrop[3] + crop[2]],
+                    [boundingBoxWithOnlyXCrop[1], boundingBoxWithOnlyXCrop[3] + crop[2]],
+                    [boundingBoxWithOnlyXCrop[1], boundingBoxWithOnlyXCrop[2] + crop[2]],
                 ]
             ),
             {
-                "name": "Bounding Box WITHOUT CROP",
+                "name": "Bounding Box WITH ONLY X CROP",
                 "edge_color": "blue",
                 "face_color": "transparent",
                 "edge_width": 2,
@@ -128,7 +151,7 @@ def runHsvMaskAndReturnAnnotations():
             "shapes",
         )
 
-        annotatedLayers = [maskWoCropLayer, cropLayer, highestXPosLayer, boundingBoxWoCropLayer]
+        annotatedLayers = [maskWoCropLayer, cropLayer, cropLayerOnlyXCrop, highestXPosLayer, boundingBoxWoCropLayer]
 
 
 def calculateEstimatedPlateWidthCm(
