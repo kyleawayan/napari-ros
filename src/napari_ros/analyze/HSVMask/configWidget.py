@@ -57,25 +57,17 @@ def runHsvMaskAndReturnAnnotations():
         # Get the current frame
         rawFrame = layer.data[frameNumber, :, :, :]
 
-        frame, mask, highestXPos, boundingBox = analyzer.completelyAnalyzeFrame(
+        frame, mask, highestXPos, boundingBoxWoCrop, maskWoCrop = analyzer.completelyAnalyzeFrame(
             rawFrame, crop, mirror, h, s, v
         )
 
         # Now lets add annotations
 
-        # Mask image layer
-        previewMask = np.zeros((rawFrame.shape[0], rawFrame.shape[1]))
-        start_point = (crop[0], crop[2])
-        previewMask[
-            start_point[0]:start_point[0]+mask.shape[0],
-            start_point[1]:start_point[1]+mask.shape[1]
-        ] = mask
-
-        # Preview the mask
-        maskLayer = (
-            previewMask,
+        # Mask image layer WITHOUT CROP
+        maskWoCropLayer = (
+            maskWoCrop,
             {
-                "name": "Mask",
+                "name": "Mask WITHOUT CROP",
                 "colormap": "green",
                 "contrast_limits": [0, 1],
                 "opacity": 0.5,
@@ -116,27 +108,27 @@ def runHsvMaskAndReturnAnnotations():
             "Shapes",
         )
 
-        # Draw a blue box around the bounding box, including offsetting the crop
-        boundingBoxLayer = (
+        # Draw a blue box around the bounding box WITHOUT CROP
+        boundingBoxWoCropLayer = (
             np.array(
                 [
-                    [boundingBox[0] + crop[0], boundingBox[2] + crop[2]],
-                    [boundingBox[0] + crop[0], boundingBox[3] + crop[2]],
-                    [boundingBox[1] + crop[0], boundingBox[3] + crop[2]],
-                    [boundingBox[1] + crop[0], boundingBox[2] + crop[2]],
+                    [boundingBoxWoCrop[0], boundingBoxWoCrop[2]],
+                    [boundingBoxWoCrop[0], boundingBoxWoCrop[3]],
+                    [boundingBoxWoCrop[1], boundingBoxWoCrop[3]],
+                    [boundingBoxWoCrop[1], boundingBoxWoCrop[2]],
                 ]
             ),
             {
-                "name": "Bounding Box",
+                "name": "Bounding Box WITHOUT CROP",
                 "edge_color": "blue",
                 "face_color": "transparent",
                 "edge_width": 2,
                 "opacity": 1,
             },
-            "Shapes",
+            "shapes",
         )
 
-        annotatedLayers = [maskLayer, cropLayer, highestXPosLayer, boundingBoxLayer]
+        annotatedLayers = [maskWoCropLayer, cropLayer, highestXPosLayer, boundingBoxWoCropLayer]
 
 
 def calculateEstimatedPlateWidthCm(

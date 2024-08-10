@@ -74,6 +74,8 @@ class HSVMaskAnalyzer:
         s: tuple[float, float],
         v: tuple[float, float],
     ):
+        maskWoCrop = self.getMask(h, s, v, frame) 
+
         # Crop the frame
         frame = frame[
             crop[0] : crop[1],
@@ -91,10 +93,10 @@ class HSVMaskAnalyzer:
         # TODO: Area filter
         mask = self.getMask(h, s, v, frame)
 
-        # Get bounding box of mask
-        boundingBox = self.getBoundingBoxFromBinaryMask(mask)
+        # Get bounding box of mask WITHOUT CROP
+        boundingBoxWoCrop = self.getBoundingBoxFromBinaryMask(maskWoCrop)
 
         # Get the highest x position of the mask
         highestXPos = self.getHighestXPosFromBinaryMask(mask)
 
-        return frame, mask, highestXPos, boundingBox
+        return frame, mask, highestXPos, boundingBoxWoCrop, maskWoCrop
