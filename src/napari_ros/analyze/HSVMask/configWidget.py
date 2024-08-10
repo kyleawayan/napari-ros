@@ -57,7 +57,7 @@ def runHsvMaskAndReturnAnnotations():
         # Get the current frame
         rawFrame = layer.data[frameNumber, :, :, :]
 
-        frame, mask, highestXPos = analyzer.completelyAnalyzeFrame(
+        frame, mask, highestXPos, boundingBox = analyzer.completelyAnalyzeFrame(
             rawFrame, crop, mirror, h, s, v
         )
 
@@ -116,7 +116,27 @@ def runHsvMaskAndReturnAnnotations():
             "Shapes",
         )
 
-        annotatedLayers = [maskLayer, cropLayer, highestXPosLayer]
+        # Draw a blue box around the bounding box, including offsetting the crop
+        boundingBoxLayer = (
+            np.array(
+                [
+                    [boundingBox[0] + crop[0], boundingBox[2] + crop[2]],
+                    [boundingBox[0] + crop[0], boundingBox[3] + crop[2]],
+                    [boundingBox[1] + crop[0], boundingBox[3] + crop[2]],
+                    [boundingBox[1] + crop[0], boundingBox[2] + crop[2]],
+                ]
+            ),
+            {
+                "name": "Bounding Box",
+                "edge_color": "blue",
+                "face_color": "transparent",
+                "edge_width": 2,
+                "opacity": 1,
+            },
+            "Shapes",
+        )
+
+        annotatedLayers = [maskLayer, cropLayer, highestXPosLayer, boundingBoxLayer]
 
 
 def calculateEstimatedPlateWidthCm(

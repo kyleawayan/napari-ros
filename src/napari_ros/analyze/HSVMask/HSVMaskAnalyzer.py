@@ -47,6 +47,26 @@ class HSVMaskAnalyzer:
 
         # Get the highest index on the X axis
         return indices[1].max()
+    
+    def getBoundingBoxFromBinaryMask(self, mask: np.ndarray):
+        """
+        Get the bounding box of the mask.
+        mask should be a boolean numpy array.
+        """
+        # Find the indices of the True values
+        indices = np.where(mask)
+
+        # If there are no True values, return 0
+        if len(indices[1]) == 0:
+            return 0
+
+        # Get the bounding box
+        return [
+            indices[0].min(),
+            indices[0].max(),
+            indices[1].min(),
+            indices[1].max(),
+        ]
 
     def completelyAnalyzeFrame(
         self,
@@ -74,7 +94,10 @@ class HSVMaskAnalyzer:
         # TODO: Area filter
         mask, contours = self.getMaskAndContours(h, s, v, frame)
 
+        # Get bounding box of mask
+        boundingBox = self.getBoundingBoxFromBinaryMask(mask)
+
         # Get the highest x position of the mask
         highestXPos = self.getHighestXPosFromBinaryMask(mask)
 
-        return frame, mask, highestXPos
+        return frame, mask, highestXPos, boundingBox
