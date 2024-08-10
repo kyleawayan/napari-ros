@@ -94,12 +94,11 @@ class AnalyzeModal(QDialog):
         self.worker = analyzeImageSequence()
         self.worker.yielded.connect(self.on_yielded)
         self.worker.returned.connect(self.on_return)
+        self.worker.started.connect(self.start_analysis)
         self.worker.start()
 
-        # Start the analysis after a short delay
-        QTimer.singleShot(1000, self.start_analysis)
-
     def start_analysis(self):
+        print("Sending start analysis")
         self.send_next_value(self.config, self.imageSequenceDirectory)
 
     def on_yielded(self, value):
