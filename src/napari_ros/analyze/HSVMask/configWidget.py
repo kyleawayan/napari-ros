@@ -42,6 +42,7 @@ def runHsvMaskAndReturnAnnotations():
         try:
             layer = new["layer"]
             crop = new["crop"]
+            cropXUpperBound = new["cropXUpperBound"]
             mirror = new["mirror"]
             h = new["h"]
             s = new["s"]
@@ -58,14 +59,14 @@ def runHsvMaskAndReturnAnnotations():
         rawFrame = layer.data[frameNumber, :, :, :]
 
         frame, mask, highestXPos, boundingBoxWithOnlyXCrop, maskWithOnlyXCrop = analyzer.completelyAnalyzeFrame(
-            rawFrame, crop, mirror, h, s, v
+            rawFrame, crop, cropXUpperBound, mirror, h, s, v
         )
 
         # Now lets add annotations
 
         # Mask image layer
         previewMask = np.zeros((rawFrame.shape[0], rawFrame.shape[1]))
-        start_point = (0, crop[2])
+        start_point = (crop[0] - cropXUpperBound, crop[2])
         previewMask[
             start_point[0]:start_point[0]+maskWithOnlyXCrop.shape[0],
             start_point[1]:start_point[1]+maskWithOnlyXCrop.shape[1]
@@ -101,10 +102,10 @@ def runHsvMaskAndReturnAnnotations():
         # Draw a box around the crop with only X crop
         boxVerticies = np.array(
             [
-                [0, crop[2]],
-                [0, crop[3]],
-                [rawFrame.shape[0], crop[3]],
-                [rawFrame.shape[0], crop[2]],
+                [crop[0] - cropXUpperBound, crop[2]],
+                [crop[0] - cropXUpperBound, crop[3]],
+                [crop[1], crop[3]],
+                [crop[1], crop[2]],
             ]
         )
         cropLayerOnlyXCrop = (
@@ -135,10 +136,10 @@ def runHsvMaskAndReturnAnnotations():
         boundingBoxWoCropLayer = (
             np.array(
                 [
-                    [boundingBoxWithOnlyXCrop[0], boundingBoxWithOnlyXCrop[2] + crop[2]],
-                    [boundingBoxWithOnlyXCrop[0], boundingBoxWithOnlyXCrop[3] + crop[2]],
-                    [boundingBoxWithOnlyXCrop[1], boundingBoxWithOnlyXCrop[3] + crop[2]],
-                    [boundingBoxWithOnlyXCrop[1], boundingBoxWithOnlyXCrop[2] + crop[2]],
+                    [boundingBoxWithOnlyXCrop[0] + (crop[0] - cropXUpperBound), boundingBoxWithOnlyXCrop[2] + crop[2]],
+                    [boundingBoxWithOnlyXCrop[0] + (crop[0] - cropXUpperBound), boundingBoxWithOnlyXCrop[3] + crop[2]],
+                    [boundingBoxWithOnlyXCrop[1] + (crop[0] - cropXUpperBound), boundingBoxWithOnlyXCrop[3] + crop[2]],
+                    [boundingBoxWithOnlyXCrop[1] + (crop[0] - cropXUpperBound), boundingBoxWithOnlyXCrop[2] + crop[2]]
                 ]
             ),
             {
@@ -151,7 +152,7 @@ def runHsvMaskAndReturnAnnotations():
             "shapes",
         )
 
-        annotatedLayers = [maskWoCropLayer, cropLayer, cropLayerOnlyXCrop, highestXPosLayer, boundingBoxWoCropLayer]
+        annotatedLayers = [maskWoCropLayer, cropLayerOnlyXCrop, cropLayer, highestXPosLayer, boundingBoxWoCropLayer]
 
 
 def calculateEstimatedPlateWidthCm(
@@ -194,23 +195,24 @@ class HSVMaskConfigWidget(QWidget):
         self.imageSequenceDirectory = self._viewer.layers[0].source.path
         self.configFilePath = os.path.join(self.imageSequenceDirectory, os.pardir, "napari_ros_last_config.json")
 
-        # Check if a config (from last time) exists
-        self.config = fetchConfigFromUserSettings(self.configFilePath)
+        self.preloadedConfig = fetchConfigFromUserSettings(self.configFilePath)
 
-        if self.config is None:
-            self.config: HSVMaskConfigType = {
-                "layer": self._viewer.layers[0],
-                "crop": [960, 987, 511, 1496],
-                "mirror": True,
-                "h": [0.0, 0.32407407407407407],
-                "s": [0.0, 0.6620370370370371],
-                "v": [0.9, 1.0],
-                "pixelsInUnit": 104,
-                "cmApart": 4.5,
-                "fps": 59.94
-            }
-        else:
-            self.config["layer"] = self._viewer.layers[0]
+        self.config: HSVMaskConfigType = {
+            "layer": self._viewer.layers[0],
+            "crop": [960, 987, 511, 1496],
+            "cropXUpperBound": 400,
+            "mirror": True,
+            "h": [0.0, 0.32407407407407407],
+            "s": [0.0, 0.6620370370370371],
+            "v": [0.9, 1.0],
+            "pixelsInUnit": 104,
+            "cmApart": 4.5,
+            "fps": 59.94
+        }
+
+        # If preloaded config, merge it with the default config
+        if self.preloadedConfig is not None:
+            self.config = {**self.config, **self.preloadedConfig}
 
         self.worker = runHsvMaskAndReturnAnnotations()
         self.worker.yielded.connect(self.on_yielded)

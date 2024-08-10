@@ -69,13 +69,14 @@ class HSVMaskAnalyzer:
         self,
         frame: np.ndarray,
         crop: List[int],
+        cropXUpperBound: int,
         mirror: bool,
         h: tuple[float, float],
         s: tuple[float, float],
         v: tuple[float, float],
     ):
         frameWithOnlyXCrop = frame[
-            :,
+            crop[0] - cropXUpperBound : crop[1],
             crop[2] : crop[3],
             :,
         ]

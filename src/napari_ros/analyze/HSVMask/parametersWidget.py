@@ -101,6 +101,19 @@ class HSVMaskParametersWidget(QWidget):
             )
             layout.addWidget(spinBox)
 
+        # Spinbox for cropXUpperBound
+        cropXUpperBoundLabel = QLabel("Crop X Upper Bound")
+        layout.addWidget(cropXUpperBoundLabel)
+
+        cropXUpperBoundSpinBox = QSpinBox()
+        cropXUpperBoundSpinBox.setRange(0, 2000)
+        cropXUpperBoundSpinBox.setValue(self.config["cropXUpperBound"])
+        cropXUpperBoundSpinBox.valueChanged.connect(
+            lambda x: self.updateCropXUpperBoundState(x)
+        )
+
+        layout.addWidget(cropXUpperBoundSpinBox)
+
         # SliderWithNumber widgets for H min-max, S min-max, V min-max
         hsvLabel = QLabel("HSV")
         layout.addWidget(hsvLabel)
@@ -195,6 +208,10 @@ class HSVMaskParametersWidget(QWidget):
 
     def updateCropState(self, cropIdx: int, newValue: int):
         self.config["crop"][cropIdx] = newValue
+        self.runSettingsChangeCallback()
+
+    def updateCropXUpperBoundState(self, newValue: int):
+        self.config["cropXUpperBound"] = newValue
         self.runSettingsChangeCallback()
 
     def updateConversionState(self, key: str, newValue):
