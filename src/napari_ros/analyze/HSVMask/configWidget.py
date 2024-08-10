@@ -61,10 +61,6 @@ def runHsvMaskAndReturnAnnotations():
             rawFrame, crop, mirror, h, s, v
         )
 
-        # MIRROR ANNOTATIONS JUST FOR FIGURE SCREENSHOTS
-        mask = np.fliplr(mask)
-        highestXPos = mask.shape[1] - highestXPos
-
         # Now lets add annotations
 
         # Mask image layer
@@ -98,7 +94,7 @@ def runHsvMaskAndReturnAnnotations():
         )
         cropLayer = (
             boxVerticies,
-            {"name": "Crop", "edge_color": "white", "face_color": "transparent", "edge_width": 5, "opacity": 1},
+            {"name": "Crop", "edge_color": "white", "face_color": "transparent", "edge_width": 2, "opacity": 1},
             "shapes",
         )
 
