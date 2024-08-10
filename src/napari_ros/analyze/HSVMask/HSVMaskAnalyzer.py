@@ -5,7 +5,7 @@ from .flameMask import getFlameMask, getBinaryContours
 
 
 class HSVMaskAnalyzer:
-    def getMaskAndContours(
+    def getMask(
         self,
         h: tuple[float, float],  # min, max, from 0 to 1
         s: tuple[float, float],
@@ -20,10 +20,7 @@ class HSVMaskAnalyzer:
         # Run getFlameMask
         mask = getFlameMask(h, s, v, hsvFrame)
 
-        # Get contours
-        contours = getBinaryContours(mask)
-
-        return mask, contours
+        return mask
 
     def getHighestXPosFromContoursBigArray(self, contoursBigArray: np.ndarray):
         """
@@ -92,7 +89,7 @@ class HSVMaskAnalyzer:
 
         # Get mask and contours
         # TODO: Area filter
-        mask, contours = self.getMaskAndContours(h, s, v, frame)
+        mask = self.getMask(h, s, v, frame)
 
         # Get bounding box of mask
         boundingBox = self.getBoundingBoxFromBinaryMask(mask)
