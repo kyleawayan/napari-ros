@@ -105,7 +105,7 @@ def gatherStatistics(df: pd.DataFrame):
 
     return stats
 
-def postProcess(highestXPosList: list, boundingBoxWithOnlyXCrop: list[list[np.int64]], config, title: str, exportDir: str, lowestXPos: list[int], flameTipCoordinates: list[int]):
+def postProcess(highestXPosList: list, boundingBoxWithSecondCropBox: list[list[np.int64]], config, title: str, exportDir: str, lowestXPos: list[int], flameTipCoordinates: list[int]):
     pixelsInUnit = config["pixelsInUnit"]
     cmApart = config["cmApart"]
     fps = config["fps"]
@@ -118,15 +118,15 @@ def postProcess(highestXPosList: list, boundingBoxWithOnlyXCrop: list[list[np.in
     print("create dataframe")
     df = highestXPosListToPd(highestXPosList)
 
-    boundingBoxWithOnlyXCrop = boundingBoxWithOnlyXCrop[firstIndex:maxIndex]
+    boundingBoxWithSecondCropBox = boundingBoxWithSecondCropBox[firstIndex:maxIndex]
     lowestXPos = lowestXPos[firstIndex:maxIndex]
     flameTipCoordinates = flameTipCoordinates[firstIndex:maxIndex]
 
     # Create rows for bounding box
-    df['bbox_topleft_y'] = [x[0] for x in boundingBoxWithOnlyXCrop]
-    df['bbox_bottomright_y'] = [x[1] for x in boundingBoxWithOnlyXCrop]
-    df['bbox_topleft_x'] = [x[2] for x in boundingBoxWithOnlyXCrop]
-    df['bbox_bottomright_x'] = [x[3] for x in boundingBoxWithOnlyXCrop]
+    df['bbox_topleft_y'] = [x[0] for x in boundingBoxWithSecondCropBox]
+    df['bbox_bottomright_y'] = [x[1] for x in boundingBoxWithSecondCropBox]
+    df['bbox_topleft_x'] = [x[2] for x in boundingBoxWithSecondCropBox]
+    df['bbox_bottomright_x'] = [x[3] for x in boundingBoxWithSecondCropBox]
 
     # Create row for lowestXPos
     df['lowestXPos'] = lowestXPos

@@ -107,7 +107,7 @@ class HSVMaskAnalyzer:
         self,
         frame: np.ndarray,
         crop: List[int],
-        cropXUpperBound: int,
+        secondCropBox: List[int],
         mirror: bool,
         h: tuple[float, float],
         s: tuple[float, float],
@@ -117,13 +117,13 @@ class HSVMaskAnalyzer:
         if mirror:
             frame = np.flip(frame, axis=1)
 
-        frameWithOnlyXCrop = frame[
-            crop[0] - cropXUpperBound : crop[1],
-            crop[2] : crop[3],
+        frameWithSecondCropBox = frame[
+            secondCropBox[0] : secondCropBox[1],
+            secondCropBox[2] : secondCropBox[3],
             :,
         ]
 
-        maskWithOnlyXCrop = self.getMask(h, s, v, frameWithOnlyXCrop) 
+        maskWithSecondCropBox = self.getMask(h, s, v, frameWithSecondCropBox) 
 
         # Crop the frame
         frame = frame[
@@ -139,10 +139,10 @@ class HSVMaskAnalyzer:
         mask = self.getMask(h, s, v, frame)
 
         # Get bounding box of mask WITHOUT CROP
-        boundingBoxWithOnlyXCrop = self.getBoundingBoxFromBinaryMask(maskWithOnlyXCrop)
+        boundingBoxWithSecondCropBox = self.getBoundingBoxFromBinaryMask(maskWithSecondCropBox)
 
         # Get the flame tip coordinates
-        flameTipCoordinates = self.getFlameTipFromBinaryMaskAndBoundaryBox(maskWithOnlyXCrop, boundingBoxWithOnlyXCrop[0])
+        flameTipCoordinates = self.getFlameTipFromBinaryMaskAndBoundaryBox(maskWithSecondCropBox, boundingBoxWithSecondCropBox[0])
 
         # Get the highest x position of the mask
         highestXPos = self.getHighestXPosFromBinaryMask(mask)
@@ -150,4 +150,4 @@ class HSVMaskAnalyzer:
         # Get the lowest x position of the mask
         lowestXPos = self.getLowestXPosFromBinaryMask(mask)
 
-        return frame, mask, highestXPos, boundingBoxWithOnlyXCrop, maskWithOnlyXCrop, lowestXPos, flameTipCoordinates
+        return frame, mask, highestXPos, boundingBoxWithSecondCropBox, maskWithSecondCropBox, lowestXPos, flameTipCoordinates

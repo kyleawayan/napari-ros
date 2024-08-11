@@ -42,7 +42,7 @@ def runHsvMaskAndReturnAnnotations():
         try:
             layer = new["layer"]
             crop = new["crop"]
-            cropXUpperBound = new["cropXUpperBound"]
+            secondCropBox = new["secondCropBox"]
             mirror = new["mirror"]
             h = new["h"]
             s = new["s"]
@@ -64,25 +64,35 @@ def runHsvMaskAndReturnAnnotations():
         # Get the current frame
         rawFrame = layer.data[frameNumber, :, :, :]
 
-        frame, mask, highestXPos, boundingBoxWithOnlyXCrop, maskWithOnlyXCrop, lowestXPos, flameTipCoordinates = analyzer.completelyAnalyzeFrame(
-            rawFrame, crop, cropXUpperBound, mirror, h, s, v
+        frame, mask, highestXPos, boundingBoxWithSecondCropBox, maskWithSecondCropBox, lowestXPos, flameTipCoordinates = analyzer.completelyAnalyzeFrame(
+            rawFrame, crop, secondCropBox, mirror, h, s, v
         )
 
         # Now lets add annotations
 
         # Mask image layer
         previewMask = np.zeros((rawFrame.shape[0], rawFrame.shape[1]))
-        start_point = (crop[0] - cropXUpperBound, crop[2])
+        start_point = (secondCropBox[0], secondCropBox[2])
+
+        # Calculate the available space in previewMask from the start_point
+        available_height = previewMask.shape[0] - start_point[0]
+        available_width = previewMask.shape[1] - start_point[1]
+
+        # Clip the mask if it exceeds the available space
+        clipped_mask = maskWithSecondCropBox[:min(maskWithSecondCropBox.shape[0], available_height), 
+                                            :min(maskWithSecondCropBox.shape[1], available_width)]
+
+        # Place the clipped mask into the previewMask
         previewMask[
-            start_point[0]:start_point[0]+maskWithOnlyXCrop.shape[0],
-            start_point[1]:start_point[1]+maskWithOnlyXCrop.shape[1]
-        ] = maskWithOnlyXCrop
+            start_point[0]:start_point[0]+clipped_mask.shape[0],
+            start_point[1]:start_point[1]+clipped_mask.shape[1]
+        ] = clipped_mask
 
         # Preview the mask
-        maskWoCropLayer = (
+        maskWithSecondCrop = (
             previewMask,
             {
-                "name": "Mask WITH ONLY X CROP",
+                "name": "Mask WITH SECOND CROP BOX",
                 "colormap": "green",
                 "contrast_limits": [0, 1],
                 "opacity": 0.5,
@@ -105,16 +115,16 @@ def runHsvMaskAndReturnAnnotations():
             "shapes",
         )
 
-        # Draw a box around the crop with only X crop
+        # Draw a box around the crop WITH SECOND CROP BOX
         boxVerticies = np.array(
             [
-                [crop[0] - cropXUpperBound, crop[2]],
-                [crop[0] - cropXUpperBound, crop[3]],
-                [crop[1], crop[3]],
-                [crop[1], crop[2]],
+                [secondCropBox[0], secondCropBox[2]],
+                [secondCropBox[0], secondCropBox[3]],
+                [secondCropBox[1], secondCropBox[3]],
+                [secondCropBox[1], secondCropBox[2]],
             ]
         )
-        cropLayerOnlyXCrop = (
+        cropLayerWithSecondCropBox = (
             boxVerticies,
             {"name": "Crop ONLY X", "edge_color": "grey", "face_color": "transparent", "edge_width": 2, "opacity": 1},
             "shapes",
@@ -156,18 +166,18 @@ def runHsvMaskAndReturnAnnotations():
             "Shapes",
         )
 
-        # Draw a blue box around the bounding box with only X crop offset
-        boundingBoxWoCropLayer = (
+        # Draw a blue box around the bounding box WITH SECOND CROP BOX offset
+        boundingBoxWithSecondCropBoxLayer = (
             np.array(
                 [
-                    [boundingBoxWithOnlyXCrop[0] + (crop[0] - cropXUpperBound), boundingBoxWithOnlyXCrop[2] + crop[2]],
-                    [boundingBoxWithOnlyXCrop[0] + (crop[0] - cropXUpperBound), boundingBoxWithOnlyXCrop[3] + crop[2]],
-                    [boundingBoxWithOnlyXCrop[1] + (crop[0] - cropXUpperBound), boundingBoxWithOnlyXCrop[3] + crop[2]],
-                    [boundingBoxWithOnlyXCrop[1] + (crop[0] - cropXUpperBound), boundingBoxWithOnlyXCrop[2] + crop[2]]
+                    [boundingBoxWithSecondCropBox[0] + (secondCropBox[0]), boundingBoxWithSecondCropBox[2] + secondCropBox[2]],
+                    [boundingBoxWithSecondCropBox[0] + (secondCropBox[0]), boundingBoxWithSecondCropBox[3] + secondCropBox[2]],
+                    [boundingBoxWithSecondCropBox[1] + (secondCropBox[0]), boundingBoxWithSecondCropBox[3] + secondCropBox[2]],
+                    [boundingBoxWithSecondCropBox[1] + (secondCropBox[0]), boundingBoxWithSecondCropBox[2] + secondCropBox[2]]
                 ]
             ),
             {
-                "name": "Bounding Box WITH ONLY X CROP",
+                "name": "Bounding Box WITH SECOND CROP BOX",
                 "edge_color": "blue",
                 "face_color": "transparent",
                 "edge_width": 2,
@@ -180,7 +190,7 @@ def runHsvMaskAndReturnAnnotations():
         flameTipLayer = (
             np.array(
                 [
-                    [flameTipCoordinates[1] + (crop[0] - cropXUpperBound), flameTipCoordinates[0] + crop[2]],
+                    [flameTipCoordinates[1] + (secondCropBox[0]), flameTipCoordinates[0] + secondCropBox[2]],
                 ]
             ),
             {
@@ -192,7 +202,7 @@ def runHsvMaskAndReturnAnnotations():
             "points",
         )
 
-        annotatedLayers = [maskWoCropLayer, cropLayerOnlyXCrop, cropLayer, highestXPosLayer, boundingBoxWoCropLayer, lowestXPosLayer, flameTipLayer]
+        annotatedLayers = [maskWithSecondCrop, cropLayerWithSecondCropBox, cropLayer, highestXPosLayer, boundingBoxWithSecondCropBoxLayer, lowestXPosLayer, flameTipLayer]
 
 
 def calculateEstimatedPlateWidthCm(
@@ -240,7 +250,7 @@ class HSVMaskConfigWidget(QWidget):
         self.config: HSVMaskConfigType = {
             "layer": self._viewer.layers[0],
             "crop": [960, 987, 511, 1496],
-            "cropXUpperBound": 400,
+            "secondCropBox": [360, 987, 511, 1496],
             "mirror": True,
             "h": [0.0, 0.32407407407407407],
             "s": [0.0, 0.6620370370370371],
