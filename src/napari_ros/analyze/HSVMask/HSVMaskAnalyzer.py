@@ -28,6 +28,7 @@ class HSVMaskAnalyzer:
         Contours should be a numpy array of shape (n, 2): (row, column)
         Note this is not used anymore as just using the boolean mask is more efficient.
         """
+        print("WARNING: getHighestXPosFromContoursBigArray is deprecated. Use getHighestXPosFromBinaryMask instead.")
         return contoursBigArray[:, 1].max()
 
     def getHighestXPosFromBinaryMask(self, mask: np.ndarray):
