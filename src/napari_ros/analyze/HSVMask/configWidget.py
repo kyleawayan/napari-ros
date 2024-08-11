@@ -124,7 +124,7 @@ def runHsvMaskAndReturnAnnotations():
         highestXPosLayer = (
             np.array(
                 [
-                    [0, highestXPos + crop[2]],
+                    [crop[0], highestXPos + crop[2]],
                     [rawFrame.shape[0], highestXPos + crop[2]],
                 ]
             ),
