@@ -80,6 +80,28 @@ class HSVMaskAnalyzer:
             indices[1].min(),
             indices[1].max(),
         ]
+    
+    def getFlameTipFromBinaryMaskAndBoundaryBox(self, mask: np.ndarray, boundaryBoxMaxY: int) -> list[int]:
+        """
+        Get the flame tip coordinates by taking the boundary box max y,
+        and finding the pixel with the highest x value in that row.
+        """
+        # Get the indices of the True values
+        indices = np.where(mask)
+
+        # If there are no True values, return 0
+        if len(indices[1]) == 0:
+            return [0, 0]
+
+        # Get the indices where the y value is the boundaryBoxMaxY
+        indicesMaxY = np.where(indices[0] == boundaryBoxMaxY)
+
+        # If there are no True values, return 0
+        if len(indicesMaxY[0]) == 0:
+            return [0, 0]
+
+        # Get the highest x value in the row
+        return [indices[1][indicesMaxY[0]].max(), boundaryBoxMaxY]
 
     def completelyAnalyzeFrame(
         self,
@@ -119,10 +141,13 @@ class HSVMaskAnalyzer:
         # Get bounding box of mask WITHOUT CROP
         boundingBoxWithOnlyXCrop = self.getBoundingBoxFromBinaryMask(maskWithOnlyXCrop)
 
+        # Get the flame tip coordinates
+        flameTipCoordinates = self.getFlameTipFromBinaryMaskAndBoundaryBox(maskWithOnlyXCrop, boundingBoxWithOnlyXCrop[0])
+
         # Get the highest x position of the mask
         highestXPos = self.getHighestXPosFromBinaryMask(mask)
 
         # Get the lowest x position of the mask
         lowestXPos = self.getLowestXPosFromBinaryMask(mask)
 
-        return frame, mask, highestXPos, boundingBoxWithOnlyXCrop, maskWithOnlyXCrop, lowestXPos
+        return frame, mask, highestXPos, boundingBoxWithOnlyXCrop, maskWithOnlyXCrop, lowestXPos, flameTipCoordinates

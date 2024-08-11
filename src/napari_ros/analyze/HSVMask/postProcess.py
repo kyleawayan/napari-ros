@@ -105,7 +105,7 @@ def gatherStatistics(df: pd.DataFrame):
 
     return stats
 
-def postProcess(highestXPosList: list, boundingBoxWithOnlyXCrop: list[list[np.int64]], config, title: str, exportDir: str, lowestXPos: list[int]):
+def postProcess(highestXPosList: list, boundingBoxWithOnlyXCrop: list[list[np.int64]], config, title: str, exportDir: str, lowestXPos: list[int], flameTipCoordinates: list[int]):
     pixelsInUnit = config["pixelsInUnit"]
     cmApart = config["cmApart"]
     fps = config["fps"]
@@ -120,6 +120,7 @@ def postProcess(highestXPosList: list, boundingBoxWithOnlyXCrop: list[list[np.in
 
     boundingBoxWithOnlyXCrop = boundingBoxWithOnlyXCrop[firstIndex:maxIndex]
     lowestXPos = lowestXPos[firstIndex:maxIndex]
+    flameTipCoordinates = flameTipCoordinates[firstIndex:maxIndex]
 
     # Create rows for bounding box
     df['bbox_topleft_y'] = [x[0] for x in boundingBoxWithOnlyXCrop]
@@ -129,6 +130,10 @@ def postProcess(highestXPosList: list, boundingBoxWithOnlyXCrop: list[list[np.in
 
     # Create row for lowestXPos
     df['lowestXPos'] = lowestXPos
+
+    # Create rows for flameTipCoordinates
+    df['flameTip_x'] = [x[0] for x in flameTipCoordinates]
+    df['flameTip_y'] = [x[1] for x in flameTipCoordinates]
 
     # Create seconds column
     print("create seconds column")

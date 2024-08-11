@@ -64,7 +64,7 @@ def runHsvMaskAndReturnAnnotations():
         # Get the current frame
         rawFrame = layer.data[frameNumber, :, :, :]
 
-        frame, mask, highestXPos, boundingBoxWithOnlyXCrop, maskWithOnlyXCrop, lowestXPos = analyzer.completelyAnalyzeFrame(
+        frame, mask, highestXPos, boundingBoxWithOnlyXCrop, maskWithOnlyXCrop, lowestXPos, flameTipCoordinates = analyzer.completelyAnalyzeFrame(
             rawFrame, crop, cropXUpperBound, mirror, h, s, v
         )
 
@@ -176,7 +176,23 @@ def runHsvMaskAndReturnAnnotations():
             "shapes",
         )
 
-        annotatedLayers = [maskWoCropLayer, cropLayerOnlyXCrop, cropLayer, highestXPosLayer, boundingBoxWoCropLayer, lowestXPosLayer]
+        # Draw a purple point at the flame tip
+        flameTipLayer = (
+            np.array(
+                [
+                    [flameTipCoordinates[1] + (crop[0] - cropXUpperBound), flameTipCoordinates[0] + crop[2]],
+                ]
+            ),
+            {
+                "name": "Flame Tip",
+                "face_color": "purple",
+                "size": 20,
+                "opacity": 1,
+            },
+            "points",
+        )
+
+        annotatedLayers = [maskWoCropLayer, cropLayerOnlyXCrop, cropLayer, highestXPosLayer, boundingBoxWoCropLayer, lowestXPosLayer, flameTipLayer]
 
 
 def calculateEstimatedPlateWidthCm(

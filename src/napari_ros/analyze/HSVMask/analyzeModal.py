@@ -44,6 +44,7 @@ def analyzeImageSequence():
     highestXPos = []
     lowestXPos = []
     boundingBoxWithOnlyXCrop = []
+    flameTipCoordinates = []
 
     for image in images:
         (
@@ -53,6 +54,7 @@ def analyzeImageSequence():
             boundingBoxWithOnlyXCropForThisFrame,
             maskWithOnlyXCrop,
             lowestXPosForThisFrame,
+            flameTipCoordinatesForThisFrame,
         ) = analyzer.completelyAnalyzeFrame(
             image,
             config["crop"],
@@ -65,6 +67,7 @@ def analyzeImageSequence():
 
         highestXPos.append(highestXPosForThisFrame)
         lowestXPos.append(lowestXPosForThisFrame)
+        flameTipCoordinates.append(flameTipCoordinatesForThisFrame)
         boundingBoxWithOnlyXCrop.append(boundingBoxWithOnlyXCropForThisFrame)
         status = f"analyzing frame {len(highestXPos)}"
         yield status
@@ -72,7 +75,7 @@ def analyzeImageSequence():
     status = "post processing data"
     yield status
 
-    postProcess(highestXPos, boundingBoxWithOnlyXCrop, config, arguments["title"], dataExportDir, lowestXPos)
+    postProcess(highestXPos, boundingBoxWithOnlyXCrop, config, arguments["title"], dataExportDir, lowestXPos, flameTipCoordinates)
 
     return
 
