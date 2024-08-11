@@ -5,6 +5,7 @@ from napari.layers import Layer
 class HSVMaskConfigType(TypedDict):
     layer: Layer
     crop: "list[int]"
+    secondCropBox: "list[int]"
     mirror: bool
     h: "list[float, float]"
     s: "list[float, float]"

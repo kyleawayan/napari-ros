@@ -101,6 +101,21 @@ class HSVMaskParametersWidget(QWidget):
             )
             layout.addWidget(spinBox)
 
+        # Spinboxes for each index in secondCropBox
+        secondCropBoxLabel = QLabel("Second crop box")
+        layout.addWidget(secondCropBoxLabel)
+
+        for i, label in enumerate(["y1", "y2", "x1", "x2"]):
+            spinBox = QSpinBox()
+            spinBox.setRange(0, 2000)
+            spinBox.setValue(self.config["secondCropBox"][i])
+            spinBox.valueChanged.connect(
+                # i=i is needed because otherwise i will be the last value
+                # (python lambda/passing by reference things)
+                lambda x, i=i: self.updateSecondCropBoxState(i, x)
+            )
+            layout.addWidget(spinBox)
+
         # SliderWithNumber widgets for H min-max, S min-max, V min-max
         hsvLabel = QLabel("HSV")
         layout.addWidget(hsvLabel)
@@ -195,6 +210,10 @@ class HSVMaskParametersWidget(QWidget):
 
     def updateCropState(self, cropIdx: int, newValue: int):
         self.config["crop"][cropIdx] = newValue
+        self.runSettingsChangeCallback()
+
+    def updateSecondCropBoxState(self, cropIdx: int, newValue: int):
+        self.config["secondCropBox"][cropIdx] = newValue
         self.runSettingsChangeCallback()
 
     def updateConversionState(self, key: str, newValue):

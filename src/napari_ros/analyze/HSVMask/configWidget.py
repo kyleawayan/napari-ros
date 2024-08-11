@@ -42,6 +42,7 @@ def runHsvMaskAndReturnAnnotations():
         try:
             layer = new["layer"]
             crop = new["crop"]
+            secondCropBox = new["secondCropBox"]
             mirror = new["mirror"]
             h = new["h"]
             s = new["s"]
@@ -54,27 +55,44 @@ def runHsvMaskAndReturnAnnotations():
         if layer is None:
             continue
 
+        # If mirror, flip the frame in the napari image layer
+        if mirror:
+            layer.affine = np.array([[1.0, 0.0, 0.0], [0.0, -1.0, layer.data.shape[2]], [0.0, 0.0, 1.0]])
+        else:
+            layer.affine = np.array([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]])
+
         # Get the current frame
         rawFrame = layer.data[frameNumber, :, :, :]
 
-        frame, mask, highestXPos = analyzer.completelyAnalyzeFrame(
-            rawFrame, crop, mirror, h, s, v
+        frame, mask, highestXPos, boundingBoxWithSecondCropBox, maskWithSecondCropBox, lowestXPos, flameTipCoordinates = analyzer.completelyAnalyzeFrame(
+            rawFrame, crop, secondCropBox, mirror, h, s, v
         )
 
         # Now lets add annotations
 
-        # Preview the frame
-        frameLayer = (
-            frame,
-            {"name": "Frame"},
-            "image",
-        )
+        # Mask image layer
+        previewMask = np.zeros((rawFrame.shape[0], rawFrame.shape[1]))
+        start_point = (secondCropBox[0], secondCropBox[2])
+
+        # Calculate the available space in previewMask from the start_point
+        available_height = previewMask.shape[0] - start_point[0]
+        available_width = previewMask.shape[1] - start_point[1]
+
+        # Clip the mask if it exceeds the available space
+        clipped_mask = maskWithSecondCropBox[:min(maskWithSecondCropBox.shape[0], available_height), 
+                                            :min(maskWithSecondCropBox.shape[1], available_width)]
+
+        # Place the clipped mask into the previewMask
+        previewMask[
+            start_point[0]:start_point[0]+clipped_mask.shape[0],
+            start_point[1]:start_point[1]+clipped_mask.shape[1]
+        ] = clipped_mask
 
         # Preview the mask
-        maskLayer = (
-            mask,
+        maskWithSecondCrop = (
+            previewMask,
             {
-                "name": "Mask",
+                "name": "Mask WITH SECOND CROP BOX",
                 "colormap": "green",
                 "contrast_limits": [0, 1],
                 "opacity": 0.5,
@@ -93,7 +111,22 @@ def runHsvMaskAndReturnAnnotations():
         )
         cropLayer = (
             boxVerticies,
-            {"name": "Crop", "edge_color": "white"},
+            {"name": "Crop", "edge_color": "white", "face_color": "transparent", "edge_width": 2, "opacity": 1},
+            "shapes",
+        )
+
+        # Draw a box around the crop WITH SECOND CROP BOX
+        boxVerticies = np.array(
+            [
+                [secondCropBox[0], secondCropBox[2]],
+                [secondCropBox[0], secondCropBox[3]],
+                [secondCropBox[1], secondCropBox[3]],
+                [secondCropBox[1], secondCropBox[2]],
+            ]
+        )
+        cropLayerWithSecondCropBox = (
+            boxVerticies,
+            {"name": "Crop ONLY X", "edge_color": "grey", "face_color": "transparent", "edge_width": 2, "opacity": 1},
             "shapes",
         )
 
@@ -101,8 +134,8 @@ def runHsvMaskAndReturnAnnotations():
         highestXPosLayer = (
             np.array(
                 [
-                    [0, highestXPos],
-                    [frame.shape[0], highestXPos],
+                    [crop[0], highestXPos + crop[2]],
+                    [rawFrame.shape[0], highestXPos + crop[2]],
                 ]
             ),
             {
@@ -110,11 +143,66 @@ def runHsvMaskAndReturnAnnotations():
                 "edge_color": "red",
                 "shape_type": "line",
                 "edge_width": 5,
+                "opacity": 1,
             },
             "Shapes",
         )
 
-        annotatedLayers = [frameLayer, maskLayer, cropLayer, highestXPosLayer]
+        # Draw a magenta line at the lowest X pos
+        lowestXPosLayer = (
+            np.array(
+                [
+                    [crop[0], lowestXPos + crop[2]],
+                    [rawFrame.shape[0], lowestXPos + crop[2]],
+                ]
+            ),
+            {
+                "name": "Lowest X Pos",
+                "edge_color": "magenta",
+                "shape_type": "line",
+                "edge_width": 5,
+                "opacity": 1,
+            },
+            "Shapes",
+        )
+
+        # Draw a blue box around the bounding box WITH SECOND CROP BOX offset
+        boundingBoxWithSecondCropBoxLayer = (
+            np.array(
+                [
+                    [boundingBoxWithSecondCropBox[0] + (secondCropBox[0]), boundingBoxWithSecondCropBox[2] + secondCropBox[2]],
+                    [boundingBoxWithSecondCropBox[0] + (secondCropBox[0]), boundingBoxWithSecondCropBox[3] + secondCropBox[2]],
+                    [boundingBoxWithSecondCropBox[1] + (secondCropBox[0]), boundingBoxWithSecondCropBox[3] + secondCropBox[2]],
+                    [boundingBoxWithSecondCropBox[1] + (secondCropBox[0]), boundingBoxWithSecondCropBox[2] + secondCropBox[2]]
+                ]
+            ),
+            {
+                "name": "Bounding Box WITH SECOND CROP BOX",
+                "edge_color": "blue",
+                "face_color": "transparent",
+                "edge_width": 2,
+                "opacity": 1,
+            },
+            "shapes",
+        )
+
+        # Draw a purple point at the flame tip
+        flameTipLayer = (
+            np.array(
+                [
+                    [flameTipCoordinates[1] + (secondCropBox[0]), flameTipCoordinates[0] + secondCropBox[2]],
+                ]
+            ),
+            {
+                "name": "Flame Tip",
+                "face_color": "purple",
+                "size": 20,
+                "opacity": 1,
+            },
+            "points",
+        )
+
+        annotatedLayers = [maskWithSecondCrop, cropLayerWithSecondCropBox, cropLayer, highestXPosLayer, boundingBoxWithSecondCropBoxLayer, lowestXPosLayer, flameTipLayer]
 
 
 def calculateEstimatedPlateWidthCm(
@@ -157,23 +245,24 @@ class HSVMaskConfigWidget(QWidget):
         self.imageSequenceDirectory = self._viewer.layers[0].source.path
         self.configFilePath = os.path.join(self.imageSequenceDirectory, os.pardir, "napari_ros_last_config.json")
 
-        # Check if a config (from last time) exists
-        self.config = fetchConfigFromUserSettings(self.configFilePath)
+        self.preloadedConfig = fetchConfigFromUserSettings(self.configFilePath)
 
-        if self.config is None:
-            self.config: HSVMaskConfigType = {
-                "layer": self._viewer.layers[0],
-                "crop": [960, 987, 511, 1496],
-                "mirror": True,
-                "h": [0.0, 0.32407407407407407],
-                "s": [0.0, 0.6620370370370371],
-                "v": [0.9, 1.0],
-                "pixelsInUnit": 104,
-                "cmApart": 4.5,
-                "fps": 59.94
-            }
-        else:
-            self.config["layer"] = self._viewer.layers[0]
+        self.config: HSVMaskConfigType = {
+            "layer": self._viewer.layers[0],
+            "crop": [960, 987, 511, 1496],
+            "secondCropBox": [360, 987, 511, 1496],
+            "mirror": True,
+            "h": [0.0, 0.32407407407407407],
+            "s": [0.0, 0.6620370370370371],
+            "v": [0.9, 1.0],
+            "pixelsInUnit": 104,
+            "cmApart": 4.5,
+            "fps": 59.94
+        }
+
+        # If preloaded config, merge it with the default config
+        if self.preloadedConfig is not None:
+            self.config = {**self.config, **self.preloadedConfig}
 
         self.worker = runHsvMaskAndReturnAnnotations()
         self.worker.yielded.connect(self.on_yielded)

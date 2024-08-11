@@ -40,17 +40,25 @@ def analyzeImageSequence():
 
     images = ImageSequence(imageSequenceDirectory)
 
-    # The index for this list is the frame number
+    # The index for these lists is the frame number
     highestXPos = []
+    lowestXPos = []
+    boundingBoxWithSecondCropBox = []
+    flameTipCoordinates = []
 
     for image in images:
         (
             frame,
             mask,
             highestXPosForThisFrame,
+            boundingBoxWithSecondCropBoxForThisFrame,
+            maskWithSecondCropBox,
+            lowestXPosForThisFrame,
+            flameTipCoordinatesForThisFrame,
         ) = analyzer.completelyAnalyzeFrame(
             image,
             config["crop"],
+            config["secondCropBox"],
             config["mirror"],
             config["h"],
             config["s"],
@@ -58,13 +66,16 @@ def analyzeImageSequence():
         )
 
         highestXPos.append(highestXPosForThisFrame)
+        lowestXPos.append(lowestXPosForThisFrame)
+        flameTipCoordinates.append(flameTipCoordinatesForThisFrame)
+        boundingBoxWithSecondCropBox.append(boundingBoxWithSecondCropBoxForThisFrame)
         status = f"analyzing frame {len(highestXPos)}"
         yield status
 
     status = "post processing data"
     yield status
 
-    postProcess(highestXPos, config, arguments["title"], dataExportDir)
+    postProcess(highestXPos, boundingBoxWithSecondCropBox, config, arguments["title"], dataExportDir, lowestXPos, flameTipCoordinates)
 
     return
 
@@ -94,12 +105,11 @@ class AnalyzeModal(QDialog):
         self.worker = analyzeImageSequence()
         self.worker.yielded.connect(self.on_yielded)
         self.worker.returned.connect(self.on_return)
+        self.worker.started.connect(self.start_analysis)
         self.worker.start()
 
-        # Start the analysis after a short delay
-        QTimer.singleShot(1000, self.start_analysis)
-
     def start_analysis(self):
+        print("Sending start analysis")
         self.send_next_value(self.config, self.imageSequenceDirectory)
 
     def on_yielded(self, value):

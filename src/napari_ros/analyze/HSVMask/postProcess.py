@@ -40,7 +40,7 @@ def autoCrop(highestXPosList: list) -> list:
     # TODO: Make sure to check weird edge cases
     dataTrim = data[firstIndex:maxIndex]
     
-    return dataTrim.tolist()
+    return dataTrim.tolist(), firstIndex, maxIndex
 
 def convertPxToCm(df: pd.DataFrame, column: str, pixelsInUnit, cmApart):
     df[column + "Cm"] = df[column] / pixelsInUnit * cmApart
@@ -105,18 +105,35 @@ def gatherStatistics(df: pd.DataFrame):
 
     return stats
 
-def postProcess(highestXPosList: list, config, title: str, exportDir: str):
+def postProcess(highestXPosList: list, boundingBoxWithSecondCropBox: list[list[np.int64]], config, title: str, exportDir: str, lowestXPos: list[int], flameTipCoordinates: list[int]):
     pixelsInUnit = config["pixelsInUnit"]
     cmApart = config["cmApart"]
     fps = config["fps"]
 
     # Auto crop
     print("auto crop")
-    highestXPosList = autoCrop(highestXPosList)
+    highestXPosList, firstIndex, maxIndex = autoCrop(highestXPosList)
 
     # Create dataframe
     print("create dataframe")
     df = highestXPosListToPd(highestXPosList)
+
+    boundingBoxWithSecondCropBox = boundingBoxWithSecondCropBox[firstIndex:maxIndex]
+    lowestXPos = lowestXPos[firstIndex:maxIndex]
+    flameTipCoordinates = flameTipCoordinates[firstIndex:maxIndex]
+
+    # Create rows for bounding box
+    df['bbox_topleft_y'] = [x[0] for x in boundingBoxWithSecondCropBox]
+    df['bbox_bottomright_y'] = [x[1] for x in boundingBoxWithSecondCropBox]
+    df['bbox_topleft_x'] = [x[2] for x in boundingBoxWithSecondCropBox]
+    df['bbox_bottomright_x'] = [x[3] for x in boundingBoxWithSecondCropBox]
+
+    # Create row for lowestXPos
+    df['lowestXPos'] = lowestXPos
+
+    # Create rows for flameTipCoordinates
+    df['flameTip_x'] = [x[0] for x in flameTipCoordinates]
+    df['flameTip_y'] = [x[1] for x in flameTipCoordinates]
 
     # Create seconds column
     print("create seconds column")
