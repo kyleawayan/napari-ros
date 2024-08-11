@@ -43,14 +43,20 @@ def analyzeImageSequence():
     # The index for this list is the frame number
     highestXPos = []
 
+    # Bounding box coordinates
+    boundingBoxWithOnlyXCrop = []
+
     for image in images:
         (
             frame,
             mask,
             highestXPosForThisFrame,
+            boundingBoxWithOnlyXCropForThisFrame,
+            maskWithOnlyXCrop,
         ) = analyzer.completelyAnalyzeFrame(
             image,
             config["crop"],
+            config["cropXUpperBound"],
             config["mirror"],
             config["h"],
             config["s"],
@@ -58,13 +64,14 @@ def analyzeImageSequence():
         )
 
         highestXPos.append(highestXPosForThisFrame)
+        boundingBoxWithOnlyXCrop.append(boundingBoxWithOnlyXCropForThisFrame)
         status = f"analyzing frame {len(highestXPos)}"
         yield status
 
     status = "post processing data"
     yield status
 
-    postProcess(highestXPos, config, arguments["title"], dataExportDir)
+    postProcess(highestXPos, boundingBoxWithOnlyXCrop, config, arguments["title"], dataExportDir)
 
     return
 
