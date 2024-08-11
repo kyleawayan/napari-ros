@@ -64,7 +64,7 @@ def runHsvMaskAndReturnAnnotations():
         # Get the current frame
         rawFrame = layer.data[frameNumber, :, :, :]
 
-        frame, mask, highestXPos, boundingBoxWithOnlyXCrop, maskWithOnlyXCrop = analyzer.completelyAnalyzeFrame(
+        frame, mask, highestXPos, boundingBoxWithOnlyXCrop, maskWithOnlyXCrop, lowestXPos = analyzer.completelyAnalyzeFrame(
             rawFrame, crop, cropXUpperBound, mirror, h, s, v
         )
 
@@ -138,6 +138,24 @@ def runHsvMaskAndReturnAnnotations():
             "Shapes",
         )
 
+        # Draw a magenta line at the lowest X pos
+        lowestXPosLayer = (
+            np.array(
+                [
+                    [crop[0], lowestXPos + crop[2]],
+                    [rawFrame.shape[0], lowestXPos + crop[2]],
+                ]
+            ),
+            {
+                "name": "Lowest X Pos",
+                "edge_color": "magenta",
+                "shape_type": "line",
+                "edge_width": 5,
+                "opacity": 1,
+            },
+            "Shapes",
+        )
+
         # Draw a blue box around the bounding box with only X crop offset
         boundingBoxWoCropLayer = (
             np.array(
@@ -158,7 +176,7 @@ def runHsvMaskAndReturnAnnotations():
             "shapes",
         )
 
-        annotatedLayers = [maskWoCropLayer, cropLayerOnlyXCrop, cropLayer, highestXPosLayer, boundingBoxWoCropLayer]
+        annotatedLayers = [maskWoCropLayer, cropLayerOnlyXCrop, cropLayer, highestXPosLayer, boundingBoxWoCropLayer, lowestXPosLayer]
 
 
 def calculateEstimatedPlateWidthCm(

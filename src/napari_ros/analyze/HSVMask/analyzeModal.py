@@ -40,10 +40,9 @@ def analyzeImageSequence():
 
     images = ImageSequence(imageSequenceDirectory)
 
-    # The index for this list is the frame number
+    # The index for these lists is the frame number
     highestXPos = []
-
-    # Bounding box coordinates
+    lowestXPos = []
     boundingBoxWithOnlyXCrop = []
 
     for image in images:
@@ -53,6 +52,7 @@ def analyzeImageSequence():
             highestXPosForThisFrame,
             boundingBoxWithOnlyXCropForThisFrame,
             maskWithOnlyXCrop,
+            lowestXPosForThisFrame,
         ) = analyzer.completelyAnalyzeFrame(
             image,
             config["crop"],
@@ -64,6 +64,7 @@ def analyzeImageSequence():
         )
 
         highestXPos.append(highestXPosForThisFrame)
+        lowestXPos.append(lowestXPosForThisFrame)
         boundingBoxWithOnlyXCrop.append(boundingBoxWithOnlyXCropForThisFrame)
         status = f"analyzing frame {len(highestXPos)}"
         yield status
@@ -71,7 +72,7 @@ def analyzeImageSequence():
     status = "post processing data"
     yield status
 
-    postProcess(highestXPos, boundingBoxWithOnlyXCrop, config, arguments["title"], dataExportDir)
+    postProcess(highestXPos, boundingBoxWithOnlyXCrop, config, arguments["title"], dataExportDir, lowestXPos)
 
     return
 

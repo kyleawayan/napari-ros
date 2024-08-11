@@ -46,6 +46,21 @@ class HSVMaskAnalyzer:
         # Get the highest index on the X axis
         return indices[1].max()
     
+    def getLowestXPosFromBinaryMask(self, mask: np.ndarray):
+        """
+        Get the lowest x position using the binary mask.
+        mask should be a boolean numpy array.
+        """
+        # Find the indices of the True values
+        indices = np.where(mask)
+
+        # If there are no True values, return 0
+        if len(indices[1]) == 0:
+            return 0
+
+        # Get the lowest index on the X axis
+        return indices[1].min()
+    
     def getBoundingBoxFromBinaryMask(self, mask: np.ndarray):
         """
         Get the bounding box of the mask.
@@ -107,4 +122,7 @@ class HSVMaskAnalyzer:
         # Get the highest x position of the mask
         highestXPos = self.getHighestXPosFromBinaryMask(mask)
 
-        return frame, mask, highestXPos, boundingBoxWithOnlyXCrop, maskWithOnlyXCrop
+        # Get the lowest x position of the mask
+        lowestXPos = self.getLowestXPosFromBinaryMask(mask)
+
+        return frame, mask, highestXPos, boundingBoxWithOnlyXCrop, maskWithOnlyXCrop, lowestXPos
