@@ -7,7 +7,7 @@
 [![codecov](https://codecov.io/gh/kyleawayan/napari-ros/branch/main/graph/badge.svg)](https://codecov.io/gh/kyleawayan/napari-ros)
 [![napari hub](https://img.shields.io/endpoint?url=https://api.napari-hub.org/shields/napari-ros)](https://napari-hub.org/plugins/napari-ros)
 
-A simple plugin to use FooBar segmentation within napari
+Code for ["Assessment and Validation of a Computer Vision Algorithm for Wildfire Rate of Spread Estimation"](https://www.mdpi.com/2571-6255/7/12/457). Documentation is WIP.
 
 ----------------------------------
 
@@ -81,3 +81,22 @@ If you encounter any problems, please [file an issue] along with a detailed desc
 [tox]: https://tox.readthedocs.io/en/latest/
 [pip]: https://pypi.org/project/pip/
 [PyPI]: https://pypi.org/
+
+## Citation
+
+If you use this napari plugin or code for your research, we would appreciate a citation:
+```
+@Article{fire7120457,
+  AUTHOR = {Ameri, Ehsan and Awayan, Kyle and Cobian-Iñiguez, Jeanette},
+  TITLE = {Assessment and Validation of a Computer Vision Algorithm for Wildfire Rate of Spread Estimation},
+  JOURNAL = {Fire},
+  VOLUME = {7},
+  YEAR = {2024},
+  NUMBER = {12},
+  ARTICLE-NUMBER = {457},
+  URL = {https://www.mdpi.com/2571-6255/7/12/457},
+  ISSN = {2571-6255},
+  ABSTRACT = {As wildfire activity increases worldwide, developing effective methods for estimating how fast it can spread is critical. This study aimed to develop and validate a computer vision algorithm for fire spread estimation. Using visual flame data from laboratory experiments on excelsior and pine needle fuel beds, we explored fire spread predictions for two types of experiments. In the first, the experiments were conducted in an environment where the flame was maintained visually undisturbed while in the second, real-world scenarios were simulated with visual obstructions. Algorithm performance evaluation was conducted by computing the index of agreement and normalized root mean square deviation (NRMSD) error. Results show that the algorithm estimates fire spread well in pristine visual environments with varying accuracy depending on the fuel type. For instance, the index of agreement between the rate of spread values estimated by the algorithm and the measured values is 0.56 for excelsior fuel beds and 0.51 for pine needle fuel beds. For visual obstructions, varying impacts on the rate of spread predictions were observed. Adding an orange background behind the flame had the least effect on algorithm performance (IAmedian = 0.45), followed by placing a Y-shape element resembling a branch (IAmedian = 0.31) and adding an LED light near the flame (IAmedian = 0.30).},
+  DOI = {10.3390/fire7120457}
+}
+```
