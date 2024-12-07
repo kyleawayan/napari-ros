@@ -23,11 +23,7 @@ https://napari.org/stable/plugins/index.html
 
 ## Installation
 
-You can install `napari-ros` via [pip]:
-
-    pip install napari-ros
-
-
+~~You can install `napari-ros` via [pip]:~~ Package is not published yet.
 
 To install latest development version :
 
