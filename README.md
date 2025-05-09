@@ -21,6 +21,10 @@ and review the napari docs for plugin developers:
 https://napari.org/stable/plugins/index.html
 -->
 
+## Usage
+
+Please see the [manual README](./manual.md).
+
 ## Installation
 
 ~~You can install `napari-ros` via [pip]:~~ Package is not published yet.
